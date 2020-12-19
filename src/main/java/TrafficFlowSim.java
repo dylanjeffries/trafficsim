@@ -2,12 +2,22 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Properties;
+
 public class TrafficFlowSim extends ApplicationAdapter {
+
+    private HashMap<String, Texture> textures;
 
     private SpriteBatch spriteBatch;
     private ShapeRenderer shapeRenderer;
@@ -22,6 +32,17 @@ public class TrafficFlowSim extends ApplicationAdapter {
     public void create() {
         super.create();
 
+        //Config
+        Config.init();
+
+        //Textures
+        textures = new HashMap<String, Texture>();
+        textures.put("road", new Texture("road.png"));
+        textures.put("cell", new Texture("empty.png"));
+        textures.put("build_valid", new Texture("build_valid2.png"));
+        textures.put("build_invalid", new Texture("build_invalid2.png"));
+
+        //Graphics
         spriteBatch = new SpriteBatch();
         shapeRenderer = new ShapeRenderer();
 
@@ -30,8 +51,7 @@ public class TrafficFlowSim extends ApplicationAdapter {
 
         backgroundColor = new ColorData(255, 255, 255, 1);
 
-        //env = new Environment();
-        testenv = new TestEnv();
+        testenv = new TestEnv(textures, debugFont);
     }
 
     private void update() {
@@ -50,6 +70,7 @@ public class TrafficFlowSim extends ApplicationAdapter {
 
         //Debug
         spriteBatch.begin();
+        debugFont.draw(spriteBatch, "Mode: " + testenv.getBuildingMode(), 20, 50);
         debugFont.draw(spriteBatch, Gdx.graphics.getFramesPerSecond() + " FPS", 20, 20);
         spriteBatch.end();
     }

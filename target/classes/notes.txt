@@ -1,0 +1,9 @@
+Building
+
+Red OR Green square follows cursor to show if you can build in that cell
+Road drags after click 1 and sets after click 2
+Intersection takes 1 cell
+
+Road build validity
+- Road cannot intersect existing objects
+- Road cannot be adjacent to other roads

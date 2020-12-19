@@ -4,6 +4,7 @@ import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
@@ -11,16 +12,16 @@ import com.badlogic.gdx.math.Vector3;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Properties;
 
 public class TestEnv {
 
+    //Graphics
+    private HashMap<String, Texture> textures;
+    private BitmapFont debugFont;
     private SpriteBatch spriteBatch;
     private ShapeRenderer shapeRenderer;
     private OrthographicCamera camera;
-
-    //Textures
-    private Texture road_texture;
-    private Texture empty_texture;
 
     //Grid
     private final int gridWidth;
@@ -43,8 +44,12 @@ public class TestEnv {
 
     //Building
     private boolean roadPaint;
+    private BuildingMode buildingMode;
 
-    public TestEnv() {
+    public TestEnv(HashMap<String, Texture> textures, BitmapFont debugFont) {
+        this.textures = textures;
+        this.debugFont = debugFont;
+
         spriteBatch = new SpriteBatch();
         shapeRenderer = new ShapeRenderer();
         shapeRenderer.setAutoShapeType(true);
@@ -54,14 +59,10 @@ public class TestEnv {
         camera.update();
         setInputProcessor();
 
-        //Textures
-        road_texture = new Texture("road.png");
-        empty_texture = new Texture("empty.png");
-
         //Grid
-        gridWidth = 100;
-        gridHeight = 100;
-        gridCellSize = 40;
+        gridWidth = Config.getInteger("grid_width");;
+        gridHeight = Config.getInteger("grid_height");;
+        gridCellSize = Config.getInteger("cell_size");
         grid = new HashMap<Vector2, Cell>();
         for (int i = 0; i < gridHeight; i++) { //
             for (int j = 0; j < gridWidth; j++) {
@@ -99,13 +100,20 @@ public class TestEnv {
 
         //Building
         roadPaint = true;
+        buildingMode = BuildingMode.NONE;
 
     }
 
     public void update() {
-        //Input
-        if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
-            roadPaint = !roadPaint;
+        //Building Mode Inputs
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) {
+            buildingMode = BuildingMode.NONE;
+        }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_2)) {
+            buildingMode = BuildingMode.ROAD;
+        }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_3)) {
+            buildingMode = BuildingMode.BULLDOZE;
         }
 
         //Startpoint Update
@@ -164,7 +172,28 @@ public class TestEnv {
 
         //Grid
         for (Cell cell : grid.values()) {
-            cell.draw(spriteBatch, empty_texture, road_texture);
+            cell.draw(spriteBatch, textures.get("cell"), textures.get("road"));
+        }
+
+        //Building
+        if (buildingMode == BuildingMode.ROAD) {
+            Vector3 cursorPos = camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
+            spriteBatch.draw(textures.get("build_valid"),
+                    (int)(cursorPos.x/gridCellSize)*gridCellSize,
+                    (int)(cursorPos.y/gridCellSize)*gridCellSize,
+                    gridCellSize/2f,
+                    gridCellSize/2f,
+                    gridCellSize,
+                    gridCellSize,
+                    1,
+                    1,
+                    0f,
+                    0,
+                    0,
+                    textures.get("build_valid").getWidth(),
+                    textures.get("build_valid").getHeight(),
+                    false,
+                    false);
         }
 
         //Startpoints
@@ -294,5 +323,9 @@ public class TestEnv {
         }
 
         roads.put(id, new Road(id, cells, cardinal));
+    }
+
+    public BuildingMode getBuildingMode() {
+        return buildingMode;
     }
 }
