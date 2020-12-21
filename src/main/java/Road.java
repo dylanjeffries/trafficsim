@@ -1,6 +1,5 @@
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 
 import java.util.ArrayList;
@@ -8,27 +7,50 @@ import java.util.HashMap;
 
 public class Road extends SimObject {
 
-    private ArrayList<Cell> cells;
-    private Cardinal cardinal;
-    private float direction;
+    private Cell startCell;
+    private Cell endCell;
+
+    private Direction direction;
+    private float degrees;
+    private int length;
 
     //Drawing
-    private float size;
     private Texture texture;
+    private int cellSize;
 
-    public Road(String id, ArrayList<Cell> cells, Cardinal cardinal) {
+    public Road(String id, Cell startCell, Cell endCell, Texture texture) {
         super(id);
-        this.cells = cells;
-        this.cardinal = cardinal;
-        direction = GeoCalc.cardinalToRadians(cardinal);
-
-        size = 40;
-        texture = new Texture("road.png");
+        this.startCell = startCell;
+        this.endCell = endCell;
+        this.texture = texture;
+        direction = calculateDirection();
+        degrees = directionToDegrees();
+        length = calculateLength();
+        cellSize = Config.getInteger("cell_size");
     }
 
     public void draw(SpriteBatch spriteBatch) {
-        for (Cell cell : cells) {
-            spriteBatch.draw(texture, cell.getX(), cell.getY(), size/2f, size/2f, size, size, 1, 1, (float)Math.toDegrees(direction), 0, 0, texture.getWidth(), texture.getHeight(), false, false);
+        float drawX = startCell.getX();
+        float drawY = startCell.getY();
+
+        for (int i = 0; i < length; i++) {
+
+            spriteBatch.draw(texture, drawX, drawY, cellSize/2f, cellSize/2f, cellSize, cellSize, 1, 1, degrees, 0, 0, texture.getWidth(), texture.getHeight(), false, false);
+
+            switch(direction) {
+                case NORTH:
+                    drawY += cellSize;
+                    break;
+                case EAST:
+                    drawX += cellSize;
+                    break;
+                case SOUTH:
+                    drawY -= cellSize;
+                    break;
+                case WEST:
+                    drawX -= cellSize;
+                    break;
+            }
         }
     }
 
@@ -48,27 +70,101 @@ public class Road extends SimObject {
         return true;
     }
 
-    public float getDirection(float x, float y) {
-        return GeoCalc.getStraightAngle(cells.get(0).getCenterX(),
-                cells.get(0).getCenterY(),
-                cells.get(cells.size()-1).getCenterX(),
-                cells.get(cells.size()-1).getCenterY());
+    private Direction calculateDirection() {
+        int sX = (int)startCell.getIndex().x;
+        int sY = (int)startCell.getIndex().y;
+        int eX = (int)endCell.getIndex().x;
+        int eY = (int)endCell.getIndex().y;
+
+        if (sX == eX && sY <= eY) {
+            return Direction.NORTH;
+        } else if (sX < eX && sY == eY) {
+            return Direction.EAST;
+        } else if (sX > eX && sY == eY) {
+            return Direction.WEST;
+        }
+        return Direction.SOUTH;
     }
 
-    public boolean intersectsEnd(float currentX, float currentY, float nextX, float nextY) {
-        return cells.get(cells.size()-1).getCenterX() >= Math.min(currentX, nextX)
-                && cells.get(cells.size()-1).getCenterX() <= Math.max(currentX, nextX)
-                && cells.get(cells.size()-1).getCenterY() <= Math.max(currentY, nextY)
-                && cells.get(cells.size()-1).getCenterY() >= Math.min(currentY, nextY);
+    private float directionToDegrees() {
+        switch(direction) {
+            case NORTH:
+                return 180f;
+            case EAST:
+                return 90f;
+            case WEST:
+                return 270f;
+        }
+        return 0f;
     }
 
-    public float getDeltaX(float currentX) {
-        return cells.get(cells.size()-1).getCenterX() - currentX;
+    private int calculateLength() {
+        int sX = (int)startCell.getIndex().x;
+        int sY = (int)startCell.getIndex().y;
+        int eX = (int)endCell.getIndex().x;
+        int eY = (int)endCell.getIndex().y;
+
+        switch(direction) {
+            case NORTH:
+                return eY - sY + 1;
+            case EAST:
+                return eX - sX + 1;
+            case WEST:
+                return sX - eX + 1;
+        }
+        return sY - eY + 1;
     }
 
-    public float getDeltaY(float currentY) {
-        return currentY - cells.get(cells.size()-1).getCenterY();
+    public void recalculate() {
+        direction = calculateDirection();
+        degrees = directionToDegrees();
+        length = calculateLength();
     }
+
+    public boolean isIndexInline(Vector2 index) {
+        if (startCell.getIndex().x == index.x || startCell.getIndex().y == index.y) {
+            return true;
+        }
+        return false;
+    }
+
+    public Cell getStartCell() {
+        return startCell;
+    }
+
+    public Direction getDirection() {
+        return direction;
+    }
+
+    public void setEndCell(Cell endCell) {
+        this.endCell = endCell;
+    }
+
+    public void setTexture(Texture texture) {
+        this.texture = texture;
+    }
+
+    //    public float getDirection(float x, float y) {
+//        return GeoCalc.getStraightAngle(cells.get(0).getCenterX(),
+//                cells.get(0).getCenterY(),
+//                cells.get(cells.size()-1).getCenterX(),
+//                cells.get(cells.size()-1).getCenterY());
+//    }
+//
+//    public boolean intersectsEnd(float currentX, float currentY, float nextX, float nextY) {
+//        return cells.get(cells.size()-1).getCenterX() >= Math.min(currentX, nextX)
+//                && cells.get(cells.size()-1).getCenterX() <= Math.max(currentX, nextX)
+//                && cells.get(cells.size()-1).getCenterY() <= Math.max(currentY, nextY)
+//                && cells.get(cells.size()-1).getCenterY() >= Math.min(currentY, nextY);
+//    }
+//
+//    public float getDeltaX(float currentX) {
+//        return cells.get(cells.size()-1).getCenterX() - currentX;
+//    }
+//
+//    public float getDeltaY(float currentY) {
+//        return currentY - cells.get(cells.size()-1).getCenterY();
+//    }
 
 //    public Road getNextRoad() {
 //        return nextRoad;
@@ -78,13 +174,13 @@ public class Road extends SimObject {
 //        this.nextRoad = nextRoad;
 //    }
 
-    public Cell getCell() {
-        return cells.get(0);
-    }
-
-    public Cell getEndCell() {
-        return cells.get(cells.size()-1);
-    }
+//    public Cell getCell() {
+//        return cells.get(0);
+//    }
+//
+//    public Cell getEndCell() {
+//        return cells.get(cells.size()-1);
+//    }
 
     public String getId() {
         return id;

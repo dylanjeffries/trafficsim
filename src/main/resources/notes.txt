@@ -1,5 +1,9 @@
 Building
 
+Left Mouse - Select or Place
+Middle Mouse - Drag camera
+Right Mouse - Deselect or Cancel
+
 Red OR Green square follows cursor to show if you can build in that cell
 Road drags after click 1 and sets after click 2
 Intersection takes 1 cell

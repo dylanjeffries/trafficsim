@@ -29,8 +29,8 @@ public class TestEnv {
     private final int gridCellSize;
     private HashMap<Vector2, Cell> grid;
 
-    private ArrayList<Car> cars;
-    private ArrayList<Car> carsToRemove;
+    //private ArrayList<Car> cars;
+    //private ArrayList<Car> carsToRemove;
 
     //SimObjects
     private int startpointCounter, roadCounter, endpointCounter;
@@ -40,11 +40,15 @@ public class TestEnv {
 
     //Input
     private boolean leftPressed;
+    private boolean middlePressed;
     private boolean rightPressed;
 
     //Building
-    private boolean roadPaint;
     private BuildingMode buildingMode;
+    private boolean buildValidity;
+
+    private Road roadInProgress;
+    private boolean roadInlineValidity;
 
     public TestEnv(HashMap<String, Texture> textures, BitmapFont debugFont) {
         this.textures = textures;
@@ -68,7 +72,7 @@ public class TestEnv {
             for (int j = 0; j < gridWidth; j++) {
                 grid.put(
                         new Vector2(j, i),
-                        new Cell(j, i, gridCellSize)
+                        new Cell(textures.get("cell"), j, i, gridCellSize)
                 );
             }
         }
@@ -85,8 +89,8 @@ public class TestEnv {
         //SimObjects Test
 
         //Cars
-        cars = new ArrayList<Car>();
-        carsToRemove = new ArrayList<Car>();
+        //cars = new ArrayList<Car>();
+        //carsToRemove = new ArrayList<Car>();
 //        Car car1 = new Car(road1);
 //        car1.setVelocity(2f);
 //        cars.add(car1);
@@ -99,9 +103,11 @@ public class TestEnv {
         rightPressed = false;
 
         //Building
-        roadPaint = true;
         buildingMode = BuildingMode.NONE;
+        buildValidity = false;
 
+        roadInProgress = null;
+        roadInlineValidity = true;
     }
 
     public void update() {
@@ -116,6 +122,11 @@ public class TestEnv {
             buildingMode = BuildingMode.BULLDOZE;
         }
 
+        //Build Validity
+        if (buildingMode == BuildingMode.ROAD) {
+            buildValidity = roadInlineValidity;
+        }
+
         //Startpoint Update
         //startpoint1.update();
 //        if (startpoint1.isReadyToSpawn()) {
@@ -124,18 +135,18 @@ public class TestEnv {
 //        }
 
         //Cars Update
-        for (Car car : cars) {
-            car.update();
-            if (car.hasReachedDestination()) {
-                carsToRemove.add(car);
-            }
-        }
-
-        //Car Disposal
-        for (Car carToRemove : carsToRemove) {
-            cars.remove(carToRemove);
-        }
-        carsToRemove.clear();
+//        for (Car car : cars) {
+//            car.update();
+//            if (car.hasReachedDestination()) {
+//                carsToRemove.add(car);
+//            }
+//        }
+//
+//        //Car Disposal
+//        for (Car carToRemove : carsToRemove) {
+//            cars.remove(carToRemove);
+//        }
+//        carsToRemove.clear();
 
         //Test
         if (Gdx.input.isKeyJustPressed(Input.Keys.Q)) {
@@ -172,28 +183,7 @@ public class TestEnv {
 
         //Grid
         for (Cell cell : grid.values()) {
-            cell.draw(spriteBatch, textures.get("cell"), textures.get("road"));
-        }
-
-        //Building
-        if (buildingMode == BuildingMode.ROAD) {
-            Vector3 cursorPos = camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
-            spriteBatch.draw(textures.get("build_valid"),
-                    (int)(cursorPos.x/gridCellSize)*gridCellSize,
-                    (int)(cursorPos.y/gridCellSize)*gridCellSize,
-                    gridCellSize/2f,
-                    gridCellSize/2f,
-                    gridCellSize,
-                    gridCellSize,
-                    1,
-                    1,
-                    0f,
-                    0,
-                    0,
-                    textures.get("build_valid").getWidth(),
-                    textures.get("build_valid").getHeight(),
-                    false,
-                    false);
+            cell.draw(spriteBatch);
         }
 
         //Startpoints
@@ -203,10 +193,51 @@ public class TestEnv {
         for (Road road : roads.values()) {
             road.draw(spriteBatch);
         }
+        if (roadInProgress != null) { roadInProgress.draw(spriteBatch); }
 
         //Cars
-        for (Car car : cars) {
-            car.draw(spriteBatch);
+//        for (Car car : cars) {
+//            car.draw(spriteBatch);
+//        }
+
+        //Building
+        if (buildingMode == BuildingMode.ROAD) {
+            Vector3 cursorPos = camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
+            if (buildValidity) {
+                spriteBatch.draw(textures.get("build_valid"),
+                        (int)(cursorPos.x/gridCellSize)*gridCellSize,
+                        (int)(cursorPos.y/gridCellSize)*gridCellSize,
+                        gridCellSize/2f,
+                        gridCellSize/2f,
+                        gridCellSize,
+                        gridCellSize,
+                        1,
+                        1,
+                        0f,
+                        0,
+                        0,
+                        textures.get("build_valid").getWidth(),
+                        textures.get("build_valid").getHeight(),
+                        false,
+                        false);
+            } else {
+                spriteBatch.draw(textures.get("build_invalid"),
+                        (int)(cursorPos.x/gridCellSize)*gridCellSize,
+                        (int)(cursorPos.y/gridCellSize)*gridCellSize,
+                        gridCellSize/2f,
+                        gridCellSize/2f,
+                        gridCellSize,
+                        gridCellSize,
+                        1,
+                        1,
+                        0f,
+                        0,
+                        0,
+                        textures.get("build_valid").getWidth(),
+                        textures.get("build_valid").getHeight(),
+                        false,
+                        false);
+            }
         }
 
         //SpriteBatch End
@@ -233,9 +264,24 @@ public class TestEnv {
                 if (button == 0) {
                     leftPressed = true;
                     Vector3 cursorPos = camera.unproject(new Vector3(screenX, screenY, 0));
-                    grid.get(new Vector2((int)(cursorPos.x/gridCellSize), (int)(cursorPos.y/gridCellSize))).setRoad(roadPaint);
+                    Vector2 cursorIndex = new Vector2((int)(cursorPos.x/gridCellSize), (int)(cursorPos.y/gridCellSize));
+                    if (buildingMode == BuildingMode.ROAD) {
+                        if (roadInProgress == null) {
+                            roadInProgress = new Road("1",
+                                    grid.get(cursorIndex),
+                                    grid.get(cursorIndex),
+                                    textures.get("road_tp"));
+                        } else {
+                            if (buildValidity) {
+                                roadInProgress.setTexture(textures.get("road"));
+                                roads.put("1", roadInProgress);
+                                roadInProgress = null;
+                            }
+                        }
+                    }
                 }
                 else if (button == 1) { rightPressed = true; }
+                else if (button == 2) { middlePressed = true; }
                 return super.touchDown(screenX, screenY, pointer, button);
             }
 
@@ -244,8 +290,8 @@ public class TestEnv {
 //                dragging = true;
                 if (leftPressed) {
                     Vector3 cursorPos = camera.unproject(new Vector3(screenX, screenY, 0));
-                    grid.get(new Vector2((int)(cursorPos.x/gridCellSize), (int)(cursorPos.y/gridCellSize))).setRoad(roadPaint);
-                } else if (rightPressed) {
+                    //grid.get(new Vector2((int)(cursorPos.x/gridCellSize), (int)(cursorPos.y/gridCellSize))).setRoad(roadPaint);
+                } else if (middlePressed) {
                     camera.translate(-(float)Gdx.input.getDeltaX(), (float)Gdx.input.getDeltaY());
                     camera.update();
                 }
@@ -256,7 +302,26 @@ public class TestEnv {
             public boolean touchUp(int screenX, int screenY, int pointer, int button) {
                 if (button == 0) { leftPressed = false; }
                 else if (button == 1) { rightPressed = false; }
+                else if (button == 2) { middlePressed = false; }
                 return super.touchUp(screenX, screenY, pointer, button);
+            }
+
+            @Override
+            public boolean mouseMoved(int screenX, int screenY) {
+
+                if (roadInProgress != null) {
+                    Vector3 cursorPos = camera.unproject(new Vector3(screenX, screenY, 0));
+                    Vector2 cursorIndex = new Vector2((int)(cursorPos.x/gridCellSize), (int)(cursorPos.y/gridCellSize));
+                    roadInlineValidity = roadInProgress.isIndexInline(cursorIndex);
+                    if (roadInlineValidity) {
+                        roadInProgress.setEndCell(grid.get(cursorIndex));
+                    } else {
+                        roadInProgress.setEndCell(roadInProgress.getStartCell());
+                    }
+                    roadInProgress.recalculate();
+                }
+
+                return super.mouseMoved(screenX, screenY);
             }
         });
     }
@@ -268,12 +333,12 @@ public class TestEnv {
         }
 
         //Roads
-        for (Road r : roads.values()) {
-            String nextSimObjectId = r.getEndCell().getSimObjectID();
-            if (nextSimObjectId != null) {
-                r.addNextSimObject(getSimObjectbyId(nextSimObjectId));
-            }
-        }
+//        for (Road r : roads.values()) {
+//            String nextSimObjectId = r.getEndCell().getSimObjectID();
+//            if (nextSimObjectId != null) {
+//                r.addNextSimObject(getSimObjectbyId(nextSimObjectId));
+//            }
+//        }
 
         //Endpoints
         for (Endpoint e : endpoints.values()) {
@@ -322,7 +387,7 @@ public class TestEnv {
             cardinal = Cardinal.WEST;
         }
 
-        roads.put(id, new Road(id, cells, cardinal));
+        //roads.put(id, new Road(id, cells, cardinal));
     }
 
     public BuildingMode getBuildingMode() {

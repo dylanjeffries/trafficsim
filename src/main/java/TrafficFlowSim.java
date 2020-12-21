@@ -25,7 +25,7 @@ public class TrafficFlowSim extends ApplicationAdapter {
     private BitmapFont debugFont;
     private ColorData backgroundColor;
 
-    private Environment env;
+    //private Environment env;
     private TestEnv testenv;
 
     @Override
@@ -37,8 +37,9 @@ public class TrafficFlowSim extends ApplicationAdapter {
 
         //Textures
         textures = new HashMap<String, Texture>();
-        textures.put("road", new Texture("road.png"));
-        textures.put("cell", new Texture("empty.png"));
+        textures.put("road", new Texture("road2.png"));
+        textures.put("road_tp", new Texture("road_tp2.png"));
+        textures.put("cell", new Texture("cell.png"));
         textures.put("build_valid", new Texture("build_valid2.png"));
         textures.put("build_invalid", new Texture("build_invalid2.png"));
 
