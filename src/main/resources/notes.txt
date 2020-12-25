@@ -11,3 +11,11 @@ Intersection takes 1 cell
 Road build validity
 - Road cannot intersect existing objects
 - Road cannot be adjacent to other roads
+
+
+Resolutions
+1920x1080 = Q
+1280x720  = W
+
+Images
+Select - L&R Margin = 26.5%

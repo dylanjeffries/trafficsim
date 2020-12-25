@@ -9,9 +9,9 @@ public class Cell {
     private Vector2 centerPosition; //Place of its center point in the world
     private float size;
 
-    private Texture texture;
+    private Road road;
 
-    private String simObjectID;
+    private Texture texture;
 
     public Cell(Texture texture, int indexX, int indexY, float size) {
         this.texture = texture;
@@ -46,11 +46,11 @@ public class Cell {
         return centerPosition.y;
     }
 
-    public String getSimObjectID() {
-        return simObjectID;
+    public Road getRoad() {
+        return road;
     }
 
-    public void setSimObjectID(String simObjectID) {
-        this.simObjectID = simObjectID;
+    public void setRoad(Road road) {
+        this.road = road;
     }
 }

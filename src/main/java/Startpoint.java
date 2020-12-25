@@ -81,11 +81,11 @@ public class Startpoint extends SimObject {
         //road = new Road(id + "R", cell, adjacentCell);
 
         //Next Road
-        if (adjacentCell.getSimObjectID() != null) {
-            //road.setNextRoad(roads.get(adjacentCell.getSimObjectID()));
-        } else {
-            return false;
-        }
+//        if (adjacentCell.getSimObjectID() != null) {
+//            //road.setNextRoad(roads.get(adjacentCell.getSimObjectID()));
+//        } else {
+//            return false;
+//        }
 
         return true;
     }

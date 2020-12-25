@@ -1,32 +1,32 @@
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputAdapter;
+import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
-import java.util.Properties;
 
 public class TrafficFlowSim extends ApplicationAdapter {
 
-    private HashMap<String, Texture> textures;
+    final float VIRTUAL_WIDTH = 1920;
+    final float VIRTUAL_HEIGHT = 1080;
 
+    //Graphics
+    private Textures textures;
     private SpriteBatch spriteBatch;
-    private ShapeRenderer shapeRenderer;
+    private OrthographicCamera camera;
 
     private BitmapFont debugFont;
     private ColorData backgroundColor;
 
-    //private Environment env;
-    private TestEnv testenv;
+    private Environment environment;
+
+    private Toolbar toolbar;
 
     @Override
     public void create() {
@@ -36,28 +36,36 @@ public class TrafficFlowSim extends ApplicationAdapter {
         Config.init();
 
         //Textures
-        textures = new HashMap<String, Texture>();
-        textures.put("road", new Texture("road2.png"));
-        textures.put("road_tp", new Texture("road_tp2.png"));
-        textures.put("cell", new Texture("cell.png"));
-        textures.put("build_valid", new Texture("build_valid2.png"));
-        textures.put("build_invalid", new Texture("build_invalid2.png"));
+        textures = new Textures("textures.properties");
 
         //Graphics
         spriteBatch = new SpriteBatch();
-        shapeRenderer = new ShapeRenderer();
+        camera = new OrthographicCamera();
 
-        debugFont = generateFont("arial.ttf", 15);
+        debugFont = generateFont("arial.ttf", 24);
         debugFont.setColor(Color.BLACK);
-
         backgroundColor = new ColorData(255, 255, 255, 1);
 
-        testenv = new TestEnv(textures, debugFont);
+        //Input
+        setInputProcessor();
+
+        //Environment
+        environment = new Environment(textures, camera);
+
+        //Toolbar
+        toolbar = new Toolbar(0, Gdx.graphics.getHeight() - Config.getInteger("toolbar_height"), textures);
     }
 
     private void update() {
-        //env.update();
-        testenv.update();
+        environment.update();
+
+        //Resolution Input
+        if (Gdx.input.isKeyJustPressed(Input.Keys.Q)) {
+            Gdx.graphics.setWindowedMode(1920, 1080);
+        }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.W)) {
+            Gdx.graphics.setWindowedMode(1280, 720);
+        }
     }
 
     private void draw() {
@@ -66,13 +74,17 @@ public class TrafficFlowSim extends ApplicationAdapter {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         //Environment
-        //env.draw();
-        testenv.draw();
+        environment.draw();
+
+        spriteBatch.begin();
+
+        //Toolbar
+        toolbar.draw(spriteBatch);
 
         //Debug
-        spriteBatch.begin();
-        debugFont.draw(spriteBatch, "Mode: " + testenv.getBuildingMode(), 20, 50);
-        debugFont.draw(spriteBatch, Gdx.graphics.getFramesPerSecond() + " FPS", 20, 20);
+        debugFont.draw(spriteBatch, "Mode: " + environment.getBuildingMode(), 10, 60);
+        debugFont.draw(spriteBatch, Gdx.graphics.getFramesPerSecond() + " FPS", 10, 30);
+
         spriteBatch.end();
     }
 
@@ -84,17 +96,16 @@ public class TrafficFlowSim extends ApplicationAdapter {
 
     @Override
     public void resize(int width, int height) {
-        //env.resize(width, height);
-        testenv.resize(width, height);
+        camera.setToOrtho(false, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+        spriteBatch.setProjectionMatrix(camera.combined);
     }
 
     @Override
     public void dispose() {
         super.dispose();
         spriteBatch.dispose();
-        shapeRenderer.dispose();
-        //env.dispose();
-        testenv.dispose();
+        environment.dispose();
+        textures.dispose();
     }
 
     private BitmapFont generateFont(String fontFileName, int fontSize) {
@@ -102,5 +113,28 @@ public class TrafficFlowSim extends ApplicationAdapter {
         FreeTypeFontGenerator.FreeTypeFontParameter fontParameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
         fontParameter.size = fontSize;
         return fontGenerator.generateFont(fontParameter);
+    }
+
+    private void setInputProcessor() {
+        Gdx.input.setInputProcessor(new InputAdapter() {
+
+            @Override
+            public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+                if (button == 0) {
+                    toolbar.touchDown();
+                }
+                return super.touchDown(screenX, screenY, pointer, button);
+            }
+
+            @Override
+            public boolean mouseMoved(int screenX, int screenY) {
+                Vector3 cursorPos = camera.unproject(new Vector3(screenX, screenY, 0));
+                //Vector2 cursorIndex = new Vector2((int)(cursorPos.x/gridCellSize), (int)(cursorPos.y/gridCellSize));
+
+                toolbar.mouseMoved(cursorPos);
+
+                return super.mouseMoved(screenX, screenY);
+            }
+        });
     }
 }

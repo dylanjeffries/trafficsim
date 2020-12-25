@@ -128,6 +128,32 @@ public class Road extends SimObject {
         return false;
     }
 
+    public ArrayList<Vector2> getCellIndices() {
+        ArrayList<Vector2> cellIndices = new ArrayList<Vector2>();
+        int indexX = (int)startCell.getIndex().x;
+        int indexY = (int)startCell.getIndex().y;
+        for (int i = 0; i < length; i++) {
+
+            cellIndices.add(new Vector2(indexX, indexY));
+
+            switch(direction) {
+                case NORTH:
+                    indexY += 1;
+                    break;
+                case EAST:
+                    indexX += 1;
+                    break;
+                case SOUTH:
+                    indexY -= 1;
+                    break;
+                case WEST:
+                    indexX -= 1;
+                    break;
+            }
+        }
+        return cellIndices;
+    }
+
     public Cell getStartCell() {
         return startCell;
     }
