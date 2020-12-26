@@ -8,6 +8,13 @@ Red OR Green square follows cursor to show if you can build in that cell
 Road drags after click 1 and sets after click 2
 Intersection takes 1 cell
 
+Road Building
+- Left Click
+    - Starting new road
+    - Finishing new road
+- Right Click
+    - Cancelling new road
+
 Road build validity
 - Road cannot intersect existing objects
 - Road cannot be adjacent to other roads

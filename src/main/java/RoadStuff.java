@@ -1,105 +1,122 @@
-//import com.badlogic.gdx.Gdx;
-//import com.badlogic.gdx.InputAdapter;
-//import com.badlogic.gdx.graphics.OrthographicCamera;
-//import com.badlogic.gdx.math.Vector2;
-//import com.badlogic.gdx.math.Vector3;
-//
-//public class RoadStuff {
-//
-//    //Camera
-//    private OrthographicCamera camera;
-//
-//    //Mouse Button States
-//    private boolean leftPressed;
-//    private boolean middlePressed;
-//    private boolean rightPressed;
-//
-//    //Cursor Locations
-//    private Vector3 cursorPos;
-//    private Vector2 cursorIndex;
-//
-//    //Building
-//    private Road newRoad;
-//    private boolean buildValidity;
-//    private boolean proxValidity;
-//    private boolean inlineValidity;
-//
-//    public RoadStuff() {
-//        newRoad = null;
-//        buildValidity = false;
-//        proxValidity = false;
-//        inlineValidity = false;
-//    }
-//
-//    public void update() {
-//        buildValidity = proxValidity && inlineValidity;
-//    }
-//
-//    public void mouseMoved(int screenX, int screenY) {
-//
-//        //Cursor Location Updates
-//        cursorPos = camera.unproject(new Vector3(screenX, screenY, 0));
-//        cursorIndex = new Vector2((int)(cursorPos.x/gridCellSize), (int)(cursorPos.y/gridCellSize));
-//
-//        if (newRoad == null) {
-//            //Prox for current cursor cell
-//        } else {
-//            //Prox for all cells within new road
-//            inlineValidity = newRoad.isIndexInline(cursorIndex);
-//            if (inlineValidity) {
-//                newRoad.setEndCell(grid.get(cursorIndex));
-//            } else {
-//                newRoad.setEndCell(newRoad.getStartCell());
-//            }
-//            newRoad.recalculate();
-//        }
-//    }
-//
-//    public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-//        if (button == 0) {
-//            leftPressed = true;
-//            Vector3 cursorPos = camera.unproject(new Vector3(screenX, screenY, 0));
-//            Vector2 cursorIndex = new Vector2((int)(cursorPos.x/gridCellSize), (int)(cursorPos.y/gridCellSize));
-//            if (buildingMode == BuildingMode.ROAD) {
-//                if (roadInProgress == null) {
-//                    roadInProgress = new Road("R" + roadCounter,
-//                            grid.get(cursorIndex),
-//                            grid.get(cursorIndex),
-//                            textures.get("road_tp"));
-//                } else {
-//                    if (buildValidity) {
-//                        roadInProgress.setTexture(textures.get("road"));
-//                        for (Vector2 v : roadInProgress.getCellIndices()) {
-//                            grid.get(v).setRoad(roadInProgress);
-//                        }
-//                        roads.put("R" + roadCounter, roadInProgress);
-//                        roadCounter++;
-//                        roadInProgress = null;
-//                    }
-//                }
-//            }
-//        }
-//        else if (button == 1) { rightPressed = true; }
-//        else if (button == 2) { middlePressed = true; }
-//        return super.touchDown(screenX, screenY, pointer, button);
-//    }
-//
-//    public boolean touchDragged(int screenX, int screenY, int pointer) {
-//        if (leftPressed) {
-//            Vector3 cursorPos = camera.unproject(new Vector3(screenX, screenY, 0));
-//            //grid.get(new Vector2((int)(cursorPos.x/gridCellSize), (int)(cursorPos.y/gridCellSize))).setRoad(roadPaint);
-//        } else if (middlePressed) {
-//            camera.translate(-(float)Gdx.input.getDeltaX(), (float)Gdx.input.getDeltaY());
-//            camera.update();
-//        }
-//        return true;
-//    }
-//
-//    public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-//        if (button == 0) { leftPressed = false; }
-//        else if (button == 1) { rightPressed = false; }
-//        else if (button == 2) { middlePressed = false; }
-//        return super.touchUp(screenX, screenY, pointer, button);
-//    }
-//
-//}
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputAdapter;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
+
+public class RoadStuff {
+
+    //Graphics
+    private Texture validTexture;
+    private Texture invalidTexture;
+    private Texture roadTexture;
+    private Texture roadTPTexture;
+    private float cellSize;
+
+    //Environment
+    private Environment env;
+
+    //Building
+    private int counter;
+    private Road newRoad;
+    private boolean newRoadReady;
+    private boolean buildValid;
+    private boolean proxValid;
+    private boolean inlineValid;
+
+    public RoadStuff(Textures textures, Environment environment) {
+        validTexture = textures.get("build_valid");
+        invalidTexture = textures.get("build_invalid");
+        roadTexture = textures.get("road");
+        roadTPTexture = textures.get("road_tp");
+        cellSize = environment.getGridCellSize();
+
+        this.env = environment;
+
+        counter = 1;
+        newRoadReady = false;
+        buildValid = false;
+        proxValid = false;
+        inlineValid = false;
+    }
+
+    public void update() {
+        buildValid = proxValid && inlineValid;
+    }
+
+    public void draw(SpriteBatch spriteBatch, Vector2 buildValidPos) {
+        if (buildValid) {
+            spriteBatch.draw(validTexture, buildValidPos.x, buildValidPos.y, cellSize, cellSize);
+        } else {
+            spriteBatch.draw(invalidTexture, buildValidPos.x, buildValidPos.y, cellSize, cellSize);
+        }
+
+        if (newRoad != null) {
+            newRoad.draw(spriteBatch);
+        }
+    }
+
+    public boolean leftClick(Vector2 cursorIndex) {
+        if (buildValid) {
+            if (newRoad == null) { //Starting a new road
+                newRoad = new Road(Integer.toString(counter),
+                        env.getCell(cursorIndex),
+                        env.getCell(cursorIndex),
+                        roadTPTexture);
+            } else { //Finishing a new road
+                newRoadReady = true;
+            }
+        }
+        return true;
+    }
+
+    public boolean rightClick() {
+        newRoad = null;
+        return true;
+    }
+
+    public void mouseMoved(Vector2 cursorIndex) {
+        if (newRoad == null) { //Looking to start a new road
+            inlineValid = true;
+            proxValid = !roadInProximity(cursorIndex);
+        } else { //Building a new road
+            inlineValid = newRoad.isIndexInline(cursorIndex);
+            if (inlineValid) {
+                newRoad.setEndCell(env.getCell(cursorIndex));
+            } else {
+                newRoad.setEndCell(newRoad.getStartCell());
+            }
+            newRoad.recalculate();
+
+            proxValid = true;
+            for (Vector2 index : newRoad.getCellIndices()) {
+                if (roadInProximity(index)) {
+                    proxValid = false;
+                }
+            }
+        }
+    }
+
+    public boolean isNewRoadReady() {
+        return newRoadReady;
+    }
+
+    public Road getNewRoad() {
+        Road newRoadCopy = new Road(newRoad); //Copy the new road
+        newRoad = null;
+        newRoadReady = false;
+        counter++;
+        newRoadCopy.setTexture(roadTexture); //Set road copy texture to full
+        return newRoadCopy;
+    }
+
+    private boolean roadInProximity(Vector2 index) {
+        return env.cellHasRoad(index) ||
+                env.cellHasRoad(index.cpy().add(0, 1)) ||
+                env.cellHasRoad(index.cpy().add(1, 0)) ||
+                env.cellHasRoad(index.cpy().add(0, -1)) ||
+                env.cellHasRoad(index.cpy().add(-1, 0));
+    }
+}

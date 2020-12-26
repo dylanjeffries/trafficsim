@@ -29,6 +29,17 @@ public class Road extends SimObject {
         cellSize = Config.getInteger("cell_size");
     }
 
+    public Road(Road road) {
+        super(road.id);
+        this.startCell = road.startCell;
+        this.endCell = road.endCell;
+        this.direction = road.direction;
+        this.degrees = road.degrees;
+        this.length = road.length;
+        this.texture = road.texture;
+        this.cellSize = road.cellSize;
+    }
+
     public void draw(SpriteBatch spriteBatch) {
         float drawX = startCell.getX();
         float drawY = startCell.getY();
