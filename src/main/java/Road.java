@@ -1,6 +1,8 @@
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
+import enums.Direction;
+import enums.Orientation;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,9 +12,10 @@ public class Road extends SimObject {
     private Cell startCell;
     private Cell endCell;
 
+    private Orientation orientation;
     private Direction direction;
-    private float degrees;
     private int length;
+    private HashMap<Direction, Float> anchors;
 
     //Drawing
     private Texture texture;
@@ -23,18 +26,19 @@ public class Road extends SimObject {
         this.startCell = startCell;
         this.endCell = endCell;
         this.texture = texture;
-        direction = calculateDirection();
-        degrees = directionToDegrees();
-        length = calculateLength();
         cellSize = Config.getInteger("cell_size");
+        orientation = calculateOrientation();
+        direction = calculateDirection();
+        length = calculateLength();
+        calculateAnchors();
     }
 
     public Road(Road road) {
         super(road.id);
         this.startCell = road.startCell;
         this.endCell = road.endCell;
+        this.orientation = road.orientation;
         this.direction = road.direction;
-        this.degrees = road.degrees;
         this.length = road.length;
         this.texture = road.texture;
         this.cellSize = road.cellSize;
@@ -46,7 +50,7 @@ public class Road extends SimObject {
 
         for (int i = 0; i < length; i++) {
 
-            spriteBatch.draw(texture, drawX, drawY, cellSize/2f, cellSize/2f, cellSize, cellSize, 1, 1, degrees, 0, 0, texture.getWidth(), texture.getHeight(), false, false);
+            spriteBatch.draw(texture, drawX, drawY, cellSize/2f, cellSize/2f, cellSize, cellSize, 1, 1, GeoCalc.orientationToDegrees(orientation), 0, 0, texture.getWidth(), texture.getHeight(), false, false);
 
             switch(direction) {
                 case NORTH:
@@ -81,6 +85,13 @@ public class Road extends SimObject {
         return true;
     }
 
+    private Orientation calculateOrientation() {
+        if ((int)startCell.getIndex().x == (int)endCell.getIndex().x) {
+            return Orientation.VERTICAL;
+        }
+        return Orientation.HORIZONTAL;
+    }
+
     private Direction calculateDirection() {
         int sX = (int)startCell.getIndex().x;
         int sY = (int)startCell.getIndex().y;
@@ -95,18 +106,6 @@ public class Road extends SimObject {
             return Direction.WEST;
         }
         return Direction.SOUTH;
-    }
-
-    private float directionToDegrees() {
-        switch(direction) {
-            case NORTH:
-                return 180f;
-            case EAST:
-                return 90f;
-            case WEST:
-                return 270f;
-        }
-        return 0f;
     }
 
     private int calculateLength() {
@@ -126,10 +125,20 @@ public class Road extends SimObject {
         return sY - eY + 1;
     }
 
+    private void calculateAnchors() {
+        anchors = new HashMap<Direction, Float>();
+        float quarter = cellSize / 4f;
+        anchors.put(Direction.NORTH, startCell.getX() + quarter);
+        anchors.put(Direction.EAST, startCell.getY() + (quarter * 3));
+        anchors.put(Direction.SOUTH, startCell.getX() + (quarter * 3));
+        anchors.put(Direction.WEST, startCell.getY() + quarter);
+    }
+
     public void recalculate() {
+        orientation = calculateOrientation();
         direction = calculateDirection();
-        degrees = directionToDegrees();
         length = calculateLength();
+        calculateAnchors();
     }
 
     public boolean isIndexInline(Vector2 index) {
@@ -165,17 +174,23 @@ public class Road extends SimObject {
         return cellIndices;
     }
 
+    public String getId() {
+        return id;
+    }
+
     public Cell getStartCell() {
         return startCell;
+    }
+
+    public void setEndCell(Cell endCell) {
+        this.endCell = endCell;
     }
 
     public Direction getDirection() {
         return direction;
     }
 
-    public void setEndCell(Cell endCell) {
-        this.endCell = endCell;
-    }
+    public float getAnchor(Direction direction) { return anchors.get(direction); }
 
     public void setTexture(Texture texture) {
         this.texture = texture;
@@ -218,8 +233,4 @@ public class Road extends SimObject {
 //    public Cell getEndCell() {
 //        return cells.get(cells.size()-1);
 //    }
-
-    public String getId() {
-        return id;
-    }
 }

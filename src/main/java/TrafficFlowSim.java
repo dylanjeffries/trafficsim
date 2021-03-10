@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import enums.BuildingMode;
 
 public class TrafficFlowSim extends ApplicationAdapter {
 
@@ -42,6 +43,9 @@ public class TrafficFlowSim extends ApplicationAdapter {
     //Road Stuff
     private RoadStuff roadStuff;
 
+    // Car Test
+    private Car car;
+
     @Override
     public void create() {
         super.create();
@@ -71,6 +75,15 @@ public class TrafficFlowSim extends ApplicationAdapter {
 
         //Road Stuff
         roadStuff = new RoadStuff(textures, environment);
+
+        // Test Road
+        environment.addRoad(new Road("100",
+                environment.getCell(new Vector2(6, 10)),
+                environment.getCell(new Vector2(20, 10)),
+                textures.get("road")));
+
+        // Test Car
+        car = new Car(environment.getCellPosition(new Vector2(10, 10)), environment, textures);
     }
 
     private void update() {
@@ -87,7 +100,7 @@ public class TrafficFlowSim extends ApplicationAdapter {
         toolbar.update();
         buildingMode = toolbar.getBuildingMode();
 
-        switch (buildingMode) {
+        switch (toolbar.getBuildingMode()) {
             case ROAD:
                 roadStuff.update();
                 if (roadStuff.isNewRoadReady()) {
@@ -95,6 +108,8 @@ public class TrafficFlowSim extends ApplicationAdapter {
                 }
                 break;
         }
+
+        car.update();
     }
 
     private void draw() {
@@ -108,10 +123,12 @@ public class TrafficFlowSim extends ApplicationAdapter {
 
         environment.draw(spriteBatch);
 
-        if (buildingMode == BuildingMode.ROAD) {
+        if (toolbar.getBuildingMode() == BuildingMode.ROAD) {
             Vector2 buildValidPos = environment.getCellPosition(cursorIndex);
             roadStuff.draw(spriteBatch, buildValidPos);
         }
+
+        car.draw(spriteBatch);
 
         //Static Draws
         spriteBatch.setProjectionMatrix(staticMatrix);
@@ -119,7 +136,7 @@ public class TrafficFlowSim extends ApplicationAdapter {
         toolbar.draw(spriteBatch);
 
         //Debug
-        debugFont.draw(spriteBatch, "Mode: " + buildingMode, 10, 60);
+        debugFont.draw(spriteBatch, "Mode: " + toolbar.getBuildingMode(), 10, 60);
         debugFont.draw(spriteBatch, Gdx.graphics.getFramesPerSecond() + " FPS", 10, 30);
 
         spriteBatch.end();
@@ -154,7 +171,7 @@ public class TrafficFlowSim extends ApplicationAdapter {
                     leftPressed = true;
                     toolbar.leftClick();
 
-                    switch (buildingMode) {
+                    switch (toolbar.getBuildingMode()) {
                         case ROAD:
                             roadStuff.leftClick(cursorIndex);
                             break;
@@ -163,7 +180,7 @@ public class TrafficFlowSim extends ApplicationAdapter {
                 } else if (button == 1) { //Right Pressed
                     rightPressed = true;
 
-                    switch (buildingMode) {
+                    switch (toolbar.getBuildingMode()) {
                         case ROAD:
                             roadStuff.rightClick();
                             break;
@@ -200,7 +217,7 @@ public class TrafficFlowSim extends ApplicationAdapter {
 
                 toolbar.mouseMoved(cursorScreenPos);
 
-                switch(buildingMode) {
+                switch(toolbar.getBuildingMode()) {
                     case ROAD:
                         roadStuff.mouseMoved(cursorIndex);
                 }

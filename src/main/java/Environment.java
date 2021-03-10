@@ -1,18 +1,12 @@
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import enums.BuildingMode;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Properties;
 
 public class Environment {
 
@@ -78,7 +72,7 @@ public class Environment {
 //        rightPressed = false;
 //
 //        //Building
-//        buildingMode = BuildingMode.SELECT;
+//        buildingMode = enums.BuildingMode.SELECT;
 //        buildValidity = false;
 //
 //        roadInProgress = null;
@@ -88,7 +82,7 @@ public class Environment {
 
     public void update() {
         //Build Validity
-//        if (buildingMode == BuildingMode.ROAD) {
+//        if (buildingMode == enums.BuildingMode.ROAD) {
 //            buildValidity = roadProximityValidity && roadInlineValidity;
 //        }
     }
@@ -109,7 +103,7 @@ public class Environment {
         }
 
         //Building
-//        if (buildingMode == BuildingMode.ROAD) {
+//        if (buildingMode == enums.BuildingMode.ROAD) {
 //            Vector3 cursorPos = camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
 //            if (buildValidity) {
 //                spriteBatch.draw(textures.get("build_valid"),
@@ -175,6 +169,10 @@ public class Environment {
 
     public Cell getCell(Vector2 index) {
         return grid.get(index);
+    }
+
+    public Cell getCellAtPosition(Vector2 pos) {
+        return grid.get(getIndexAtPosition(new Vector3(pos, 0)));
     }
 
     public Vector2 getCellPosition(Vector2 index) {
@@ -313,18 +311,18 @@ public class Environment {
 //        String id = "R" + roadCounter;
 //
 //        ArrayList<Cell> cells = new ArrayList<Cell>();
-//        Cardinal cardinal = Cardinal.SOUTH;
+//        enums.Cardinal cardinal = enums.Cardinal.SOUTH;
 //
 //        if (startCell.getIndex().x == endCell.getIndex().x && startCell.getIndex().y < endCell.getIndex().y) { // NORTH
 //            for (float i = startCell.getIndex().y; i <= endCell.getIndex().y; i++) {
 //                cells.add(grid.get(new Vector2(startCell.getIndex().x, i)));
 //            }
-//            cardinal = Cardinal.NORTH;
+//            cardinal = enums.Cardinal.NORTH;
 //        } else if (startCell.getIndex().y == endCell.getIndex().y && startCell.getIndex().x < endCell.getIndex().x) { // EAST
 //            for (float i = startCell.getIndex().x; i <= endCell.getIndex().x; i++) {
 //                cells.add(grid.get(new Vector2(i, startCell.getIndex().y)));
 //            }
-//            cardinal = Cardinal.EAST;
+//            cardinal = enums.Cardinal.EAST;
 //        } else if (startCell.getIndex().x == endCell.getIndex().x && startCell.getIndex().y > endCell.getIndex().y) { // SOUTH
 //            for (float i = startCell.getIndex().y; i >= endCell.getIndex().y; i--) {
 //                cells.add(grid.get(new Vector2(startCell.getIndex().x, i)));
@@ -333,7 +331,7 @@ public class Environment {
 //            for (float i = startCell.getIndex().x; i >= endCell.getIndex().x; i--) {
 //                cells.add(grid.get(new Vector2(i, startCell.getIndex().y)));
 //            }
-//            cardinal = Cardinal.WEST;
+//            cardinal = enums.Cardinal.WEST;
 //        }
 //    }
 

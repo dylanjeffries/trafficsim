@@ -30,7 +30,7 @@ public class Cell {
         return index;
     }
 
-    public Vector2 getPosition() { return position; }
+    public Vector2 getPosition() { return new Vector2(position); }
 
     public float getX() {
         return position.x;

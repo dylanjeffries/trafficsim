@@ -1,6 +1,7 @@
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
+import enums.Cardinal;
 
 import java.util.HashMap;
 
@@ -27,7 +28,7 @@ public class Startpoint extends SimObject {
 
         this.cell = cell;
         this.cardinal = cardinal;
-        direction = GeoCalc.cardinalToRadians(cardinal);
+        //direction = GeoCalc.cardinalToRadians(cardinal);
 
         clock = 0;
         readyToSpawn = false;

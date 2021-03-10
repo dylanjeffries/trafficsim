@@ -1,3 +1,7 @@
+import enums.Cardinal;
+import enums.Direction;
+import enums.Orientation;
+
 public class GeoCalc {
 
     public static float getStraightAngle(float x1, float y1, float x2, float y2) {
@@ -23,17 +27,31 @@ public class GeoCalc {
                 && checkY >= Math.min(currentY, nextY);
     }
 
-    public static float cardinalToRadians(Cardinal cardinal) {
-        switch (cardinal) {
-            case NORTH:
-                return (float)Math.toRadians(180);
-            case EAST:
-                return (float)Math.toRadians(90);
-            case SOUTH:
-                return (float)Math.toRadians(0);
-            case WEST:
-                return (float)Math.toRadians(270);
+    public static float orientationToDegrees(Orientation orientation) {
+        switch(orientation) {
+            case HORIZONTAL:
+                return 90f;
+            case VERTICAL:
+                return 0f;
         }
-        return 0;
+        return 0f;
+    }
+
+    public static float directionToDegrees(Direction direction) {
+        switch (direction) {
+            case NORTH:
+                return 180f;
+            case EAST:
+                return 90f;
+            case SOUTH:
+                return 0f;
+            case WEST:
+                return 270f;
+        }
+        return 0f;
+    }
+
+    public static float directionToRadians(Direction direction) {
+        return (float)Math.toRadians(directionToDegrees(direction));
     }
 }
