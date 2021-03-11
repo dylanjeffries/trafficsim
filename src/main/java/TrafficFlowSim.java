@@ -10,13 +10,14 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import enums.BuildingMode;
+import enums.SimulationMode;
 
 public class TrafficFlowSim extends ApplicationAdapter {
 
     final float VIRTUAL_WIDTH = 1920;
     final float VIRTUAL_HEIGHT = 1080;
 
-    //Graphics
+    // Graphics
     private Textures textures;
     private SpriteBatch spriteBatch;
     private BoundedCamera camera;
@@ -25,16 +26,17 @@ public class TrafficFlowSim extends ApplicationAdapter {
     private BitmapFont debugFont;
     private ColorData backgroundColor;
 
-    //Input
+    // Mouse and Cursor
     private boolean leftPressed;
     private boolean rightPressed;
     private boolean middlePressed;
-
-    //Building
     private Vector3 cursorScreenPos;
     private Vector3 cursorEnvPos;
     private Vector2 cursorIndex;
+
+    // Modes
     private BuildingMode buildingMode;
+    private SimulationMode simulationMode;
 
     private Environment environment;
 
@@ -95,21 +97,30 @@ public class TrafficFlowSim extends ApplicationAdapter {
             Gdx.graphics.setWindowedMode(1280, 720);
         }
 
-        //Updates
-        environment.update();
+        // First Updates
         toolbar.update();
         buildingMode = toolbar.getBuildingMode();
+        simulationMode = toolbar.getSimulationMode();
+        environment.update();
 
-        switch (toolbar.getBuildingMode()) {
-            case ROAD:
-                roadStuff.update();
-                if (roadStuff.isNewRoadReady()) {
-                    environment.addRoad(roadStuff.getNewRoad());
+        // Simulation Mode Switch
+        switch (toolbar.getSimulationMode()) {
+            case RUNNING:
+                car.update();
+                break;
+
+            case STOPPED:
+                // Building Mode Switch
+                switch (toolbar.getBuildingMode()) {
+                    case ROAD:
+                        roadStuff.update();
+                        if (roadStuff.isNewRoadReady()) {
+                            environment.addRoad(roadStuff.getNewRoad());
+                        }
+                        break;
                 }
                 break;
         }
-
-        car.update();
     }
 
     private void draw() {
