@@ -60,7 +60,6 @@ public class Car {
             case EAST:
             case WEST:
                 float diff = anchor - position.y;
-                System.out.println(diff);
                 if (diff == 0) {
                     break;
                 } else if (Math.abs(diff) <= 1) {
