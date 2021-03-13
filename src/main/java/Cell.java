@@ -9,6 +9,7 @@ public class Cell {
     private Vector2 centerPosition; //Place of its center point in the world
     private float size;
 
+    private SimObject simObject;
     private Road road;
 
     private Texture texture;
@@ -46,6 +47,14 @@ public class Cell {
 
     public float getCenterY() {
         return centerPosition.y;
+    }
+
+    public SimObject getSimObject() {
+        return simObject;
+    }
+
+    public void setSimObject(SimObject simObject) {
+        this.simObject = simObject;
     }
 
     public Road getRoad() {

@@ -6,7 +6,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 
-public class RoadStuff {
+public class RoadBuilder {
 
     //Graphics
     private Texture validTexture;
@@ -16,7 +16,7 @@ public class RoadStuff {
     private float cellSize;
 
     //Environment
-    private Environment env;
+    private Environment environment;
 
     //Building
     private int counter;
@@ -26,14 +26,14 @@ public class RoadStuff {
     private boolean proxValid;
     private boolean inlineValid;
 
-    public RoadStuff(Textures textures, Environment environment) {
+    public RoadBuilder(Textures textures, Environment environment) {
         validTexture = textures.get("build_valid");
         invalidTexture = textures.get("build_invalid");
         roadTexture = textures.get("road");
         roadTPTexture = textures.get("road_tp");
         cellSize = environment.getGridCellSize();
 
-        this.env = environment;
+        this.environment = environment;
 
         counter = 1;
         newRoadReady = false;
@@ -61,9 +61,9 @@ public class RoadStuff {
     public boolean leftClick(Vector2 cursorIndex) {
         if (buildValid) {
             if (newRoad == null) { //Starting a new road
-                newRoad = new Road(Integer.toString(counter),
-                        env.getCell(cursorIndex),
-                        env.getCell(cursorIndex),
+                newRoad = new Road('R' + Integer.toString(counter),
+                        environment.getCell(cursorIndex),
+                        environment.getCell(cursorIndex),
                         roadTPTexture);
             } else { //Finishing a new road
                 newRoadReady = true;
@@ -84,7 +84,7 @@ public class RoadStuff {
         } else { //Building a new road
             inlineValid = newRoad.isIndexInline(cursorIndex);
             if (inlineValid) {
-                newRoad.setEndCell(env.getCell(cursorIndex));
+                newRoad.setEndCell(environment.getCell(cursorIndex));
             } else {
                 newRoad.setEndCell(newRoad.getStartCell());
             }
@@ -113,10 +113,10 @@ public class RoadStuff {
     }
 
     private boolean roadInProximity(Vector2 index) {
-        return env.cellHasRoad(index) ||
-                env.cellHasRoad(index.cpy().add(0, 1)) ||
-                env.cellHasRoad(index.cpy().add(1, 0)) ||
-                env.cellHasRoad(index.cpy().add(0, -1)) ||
-                env.cellHasRoad(index.cpy().add(-1, 0));
+        return environment.cellHasRoad(index) ||
+                environment.cellHasRoad(index.cpy().add(0, 1)) ||
+                environment.cellHasRoad(index.cpy().add(1, 0)) ||
+                environment.cellHasRoad(index.cpy().add(0, -1)) ||
+                environment.cellHasRoad(index.cpy().add(-1, 0));
     }
 }

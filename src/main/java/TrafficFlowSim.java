@@ -10,6 +10,7 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import enums.BuildingMode;
+import enums.Direction;
 import enums.SimulationMode;
 
 public class TrafficFlowSim extends ApplicationAdapter {
@@ -42,20 +43,22 @@ public class TrafficFlowSim extends ApplicationAdapter {
 
     private Toolbar toolbar;
 
-    //Road Stuff
-    private RoadStuff roadStuff;
+    // Builders
+    private RoadBuilder roadBuilder;
+    private TunnelBuilder tunnelBuilder;
 
     // Car Test
     private Car car;
+    private Car car2;
 
     @Override
     public void create() {
         super.create();
 
-        //Config
+        // Config
         Config.init();
 
-        //Graphics
+        // Graphics
         textures = new Textures("textures.properties");
         spriteBatch = new SpriteBatch();
         camera = new BoundedCamera(0, (Config.getInteger("grid_width") * Config.getInteger("cell_size")),
@@ -66,17 +69,18 @@ public class TrafficFlowSim extends ApplicationAdapter {
         debugFont.setColor(Color.BLACK);
         backgroundColor = new ColorData(255, 255, 255, 1);
 
-        //Input
+        // Input
         setInputProcessor();
 
-        //Environment
-        environment = new Environment(textures, camera);
+        // Environment
+        environment = new Environment(textures);
 
-        //Toolbar
+        // Toolbar
         toolbar = new Toolbar(0, Gdx.graphics.getHeight() - Config.getInteger("toolbar_height"), textures);
 
-        //Road Stuff
-        roadStuff = new RoadStuff(textures, environment);
+        // Builders
+        roadBuilder = new RoadBuilder(textures, environment);
+        tunnelBuilder = new TunnelBuilder(textures, environment);
 
         // Test Road
         environment.addRoad(new Road("100",
@@ -85,11 +89,13 @@ public class TrafficFlowSim extends ApplicationAdapter {
                 textures.get("road")));
 
         // Test Car
-        car = new Car(environment.getCellPosition(new Vector2(10, 10)), environment, textures);
+        car = new Car(environment.getCellPosition(new Vector2(6, 10)), environment, textures);
+        car2 = new Car(environment.getCellPosition(new Vector2(20, 10)), environment, textures);
+        car2.setDirection(Direction.WEST);
     }
 
     private void update() {
-        //Resolution Input
+        // Resolution Input
         if (Gdx.input.isKeyJustPressed(Input.Keys.Q)) {
             Gdx.graphics.setWindowedMode(1920, 1080);
         }
@@ -98,24 +104,32 @@ public class TrafficFlowSim extends ApplicationAdapter {
         }
 
         // First Updates
+        environment.update();
         toolbar.update();
         buildingMode = toolbar.getBuildingMode();
         simulationMode = toolbar.getSimulationMode();
-        environment.update();
 
         // Simulation Mode Switch
         switch (toolbar.getSimulationMode()) {
             case RUNNING:
                 car.update();
+                car2.update();
                 break;
 
             case STOPPED:
                 // Building Mode Switch
                 switch (toolbar.getBuildingMode()) {
                     case ROAD:
-                        roadStuff.update();
-                        if (roadStuff.isNewRoadReady()) {
-                            environment.addRoad(roadStuff.getNewRoad());
+                        roadBuilder.update();
+                        if (roadBuilder.isNewRoadReady()) {
+                            environment.addRoad(roadBuilder.getNewRoad());
+                        }
+                        break;
+
+                    case TUNNEL:
+                        tunnelBuilder.update();
+                        if (tunnelBuilder.isNewTunnelReady()) {
+                            environment.addTunnel(tunnelBuilder.getNewTunnel());
                         }
                         break;
                 }
@@ -134,12 +148,32 @@ public class TrafficFlowSim extends ApplicationAdapter {
 
         environment.draw(spriteBatch);
 
-        if (toolbar.getBuildingMode() == BuildingMode.ROAD) {
-            Vector2 buildValidPos = environment.getCellPosition(cursorIndex);
-            roadStuff.draw(spriteBatch, buildValidPos);
+        // Simulation Mode Switch
+        switch (toolbar.getSimulationMode()) {
+            case STOPPED:
+                // Building Mode Switch
+                switch (toolbar.getBuildingMode()) {
+                    case SELECT:
+                        spriteBatch.draw(textures.get("select"),
+                                environment.getCellPosition(cursorIndex).x,
+                                environment.getCellPosition(cursorIndex).y,
+                                environment.getGridCellSize(),
+                                environment.getGridCellSize());
+                        break;
+
+                    case ROAD:
+                        roadBuilder.draw(spriteBatch, environment.getCellPosition(cursorIndex));
+                        break;
+
+                    case TUNNEL:
+                        tunnelBuilder.draw(spriteBatch, environment.getCellPosition(cursorIndex));
+                        break;
+                }
+                break;
         }
 
         car.draw(spriteBatch);
+        car2.draw(spriteBatch);
 
         //Static Draws
         spriteBatch.setProjectionMatrix(staticMatrix);
@@ -180,12 +214,19 @@ public class TrafficFlowSim extends ApplicationAdapter {
             public boolean touchDown(int screenX, int screenY, int pointer, int button) {
                 if (button == 0) { //Left Pressed
                     leftPressed = true;
-                    toolbar.leftClick();
+                    boolean toolbarClicked = toolbar.leftClick();
 
-                    switch (toolbar.getBuildingMode()) {
-                        case ROAD:
-                            roadStuff.leftClick(cursorIndex);
-                            break;
+                    // If a toolbar button was not clicked and the simulation is stopped
+                    if (!toolbarClicked && toolbar.getSimulationMode() == SimulationMode.STOPPED) {
+                        switch (toolbar.getBuildingMode()) {
+                            case ROAD:
+                                roadBuilder.leftClick(cursorIndex);
+                                break;
+
+                            case TUNNEL:
+                                tunnelBuilder.leftClick(cursorIndex);
+                                break;
+                        }
                     }
 
                 } else if (button == 1) { //Right Pressed
@@ -193,7 +234,7 @@ public class TrafficFlowSim extends ApplicationAdapter {
 
                     switch (toolbar.getBuildingMode()) {
                         case ROAD:
-                            roadStuff.rightClick();
+                            roadBuilder.rightClick();
                             break;
                     }
 
@@ -230,7 +271,10 @@ public class TrafficFlowSim extends ApplicationAdapter {
 
                 switch(toolbar.getBuildingMode()) {
                     case ROAD:
-                        roadStuff.mouseMoved(cursorIndex);
+                        roadBuilder.mouseMoved(cursorIndex);
+
+                    case TUNNEL:
+                        tunnelBuilder.mouseMoved(cursorIndex);
                 }
 
                 return super.mouseMoved(screenX, screenY);

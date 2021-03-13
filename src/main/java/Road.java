@@ -3,6 +3,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import enums.Direction;
 import enums.Orientation;
+import enums.SimObjectType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,7 +23,7 @@ public class Road extends SimObject {
     private int cellSize;
 
     public Road(String id, Cell startCell, Cell endCell, Texture texture) {
-        super(id);
+        super(id, SimObjectType.ROAD);
         this.startCell = startCell;
         this.endCell = endCell;
         this.texture = texture;
@@ -34,14 +35,7 @@ public class Road extends SimObject {
     }
 
     public Road(Road road) {
-        super(road.id);
-        this.startCell = road.startCell;
-        this.endCell = road.endCell;
-        this.orientation = road.orientation;
-        this.direction = road.direction;
-        this.length = road.length;
-        this.texture = road.texture;
-        this.cellSize = road.cellSize;
+        this(road.id, road.startCell, road.endCell, road.texture);
     }
 
     public void draw(SpriteBatch spriteBatch) {

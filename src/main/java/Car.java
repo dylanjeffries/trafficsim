@@ -113,6 +113,10 @@ public class Car {
         spriteBatch.draw(marker, position.x, position.y, 4, 4);
     }
 
+    public void setDirection(Direction direction) {
+        this.direction = direction;
+    }
+
     public void setVelocity(float velocity) {
         this.velocity = velocity;
     }

@@ -19,6 +19,9 @@ Road build validity
 - Road cannot intersect existing objects
 - Road cannot be adjacent to other roads
 
+Tunnel Building
+- Tunnels can go anywhere an existing object isn't
+- Rotate tunnel with R
 
 Resolutions
 1920x1080 = Q

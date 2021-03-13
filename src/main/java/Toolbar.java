@@ -20,6 +20,7 @@ public class Toolbar {
     private BuildingMode buildingMode;
     private Button selectButton;
     private Button roadButton;
+    private Button tunnelButton;
 
     private SimulationMode simulationMode;
     private Button pauseButton;
@@ -35,11 +36,14 @@ public class Toolbar {
         buttonY = pos.y + (height * 0.1f);
 
         // Building Buttons and Mode
-        selectButton = new Button(100 + height, buttonY, buttonSize, buttonSize, false,
+        selectButton = new Button(100, buttonY, buttonSize, buttonSize, false,
                 textures.get("select_inactive"), textures.get("select_active"), textures.get("select_hover"), textures.get("select_disabled"));
 
-        roadButton = new Button(100 + (height * 2), buttonY, buttonSize, buttonSize, false,
+        roadButton = new Button(100 + height, buttonY, buttonSize, buttonSize, false,
                 textures.get("road_inactive"), textures.get("road_active"), textures.get("road_hover"), textures.get("road_disabled"));
+
+        tunnelButton = new Button(100 + (height * 2), buttonY, buttonSize, buttonSize, false,
+                textures.get("tunnel_inactive"), textures.get("tunnel_active"), textures.get("tunnel_hover"), textures.get("tunnel_disabled"));
 
         buildingMode = BuildingMode.SELECT;
         selectButton.activate();
@@ -66,6 +70,8 @@ public class Toolbar {
             buildingButtonClicked(selectButton, BuildingMode.SELECT);
         } else if (roadButton.isClicked()) {
             buildingButtonClicked(roadButton, BuildingMode.ROAD);
+        } else if (tunnelButton.isClicked()) {
+            buildingButtonClicked(tunnelButton, BuildingMode.TUNNEL);
         }
 
         // Simulation Buttons Logic
@@ -87,6 +93,7 @@ public class Toolbar {
         // Building Buttons
         selectButton.draw(spriteBatch);
         roadButton.draw(spriteBatch);
+        tunnelButton.draw(spriteBatch);
 
         // Simulation Buttons
         pauseButton.draw(spriteBatch);
@@ -100,6 +107,7 @@ public class Toolbar {
         // Deactivate all building buttons
         selectButton.deactivate();
         roadButton.deactivate();
+        tunnelButton.deactivate();
         // Activate clicked button
         button.activate();
     }
@@ -119,6 +127,7 @@ public class Toolbar {
         // Building Buttons
         selectButton.mouseMoved(cursorPos);
         roadButton.mouseMoved(cursorPos);
+        tunnelButton.mouseMoved(cursorPos);
 
         // Simulation Buttons
         pauseButton.mouseMoved(cursorPos);
@@ -129,6 +138,7 @@ public class Toolbar {
     public boolean leftClick() {
         return selectButton.leftClick() ||
                 roadButton.leftClick() ||
+                tunnelButton.leftClick() ||
                 pauseButton.leftClick() ||
                 playButton.leftClick() ||
                 stopButton.leftClick();

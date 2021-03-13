@@ -1,7 +1,6 @@
 package enums;
 
-public enum BuildingMode {
-    SELECT,
+public enum SimObjectType {
     ROAD,
     TUNNEL;
 }
