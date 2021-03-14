@@ -2,7 +2,7 @@ import enums.Cardinal;
 import enums.Direction;
 import enums.Orientation;
 
-public class GeoCalc {
+public class Calculator {
 
     public static float getStraightAngle(float x1, float y1, float x2, float y2) {
         float xDiff = x2 - x1;
@@ -27,6 +27,7 @@ public class GeoCalc {
                 && checkY >= Math.min(currentY, nextY);
     }
 
+    // Direction and Orientation Enum conversion to angles
     public static float orientationToDegrees(Orientation orientation) {
         switch(orientation) {
             case HORIZONTAL:
@@ -51,7 +52,18 @@ public class GeoCalc {
         return 0f;
     }
 
+    public static float orientationToRadians(Orientation orientation) {
+        return (float)Math.toRadians(orientationToDegrees(orientation));
+    }
+
     public static float directionToRadians(Direction direction) {
         return (float)Math.toRadians(directionToDegrees(direction));
+    }
+
+    // Value Cap
+    public static float capFloat(float value, float min, float max) {
+        if (value < min) { return min; }
+        else if (value > max) { return max; }
+        return value;
     }
 }

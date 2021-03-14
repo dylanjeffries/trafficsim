@@ -1,74 +1,77 @@
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
-import enums.Cardinal;
 import enums.Direction;
+import enums.SimObjectType;
 
-public class Car {
+public class Car extends SimObject {
 
-    //Vectors
+    // Position
     private Vector2 position;
-    private Vector2 centerPosition;
-    private Vector2 delta;
+    private Vector2 frontPosition;
+    private Vector2 backPosition;
 
-    //Dimensions
+    // Dimensions
     private float width;
-    private float height;
+    private float length;
 
-    //Physics
+    // Physics
+    private Vector2 delta;
     private float velocity;
     private float acceleration;
     private Direction direction;
 
-    //Drawing
+    // Environment
+    private Environment environment;
+    private Cell currentCell;
+    private Cell forwardCell;
+
+    // Drawing
     private Texture texture;
     private Texture marker;
 
-    //Other
-    private Environment environment;
+    // Other
     private boolean reachedDestination;
     private float travelled;
 
 
-    public Car(Vector2 position, Environment environment, Textures textures) {
+    public Car(String id, Vector2 position, Direction direction, Environment environment, Textures textures) {
+        super(id, SimObjectType.CAR);
         this.position = position;
         this.environment = environment;
-//        centerPosition = position.add()
         delta = new Vector2(0, 0);
 
         width = 24;
-        height = 48;
+        length = 48;
 
         velocity = 0;
         acceleration = 0;
-        direction = Direction.EAST;
+        this.direction = direction;
+
+        calculateFrontAndBackPositions();
 
         texture = textures.get("car_pink");
         marker = textures.get("marker");
     }
 
     public void update() {
-        // Resets
+        // acceleration = 33.5f / 600f; // 60 Iterations per second
+        // velocity += acceleration;
+        // Reset delta
         delta.set(0, 0);
 
-//        acceleration = 33.5f / 600f; // 60 Iterations per second
-//        velocity += acceleration;
+        // Current and Forward Cell
+        currentCell = environment.getCellAtPosition(frontPosition);
+        forwardCell = environment.getCell(calculateForwardIndex(environment.getIndexAtPosition(frontPosition)));
 
-        // Anchor
-        float anchor = environment.getCellAtPosition(position).getRoad().getAnchor(direction);
-        switch (direction) {
-            case EAST:
-            case WEST:
-                float diff = anchor - position.y;
-                if (diff == 0) {
-                    break;
-                } else if (Math.abs(diff) <= 1) {
-                    delta.y += anchor - position.y;
-                } else if (diff > 1) {
-                    delta.y += 1;
-                } else if (diff < -1) {
-                    delta.y -= 1;
-                }
+        // Current Cell Actions
+        switch (currentCell.getSimObjectType()) {
+            case ROAD:
+                roadActions();
+                break;
+
+            case TUNNEL:
+                tunnelActions();
                 break;
         }
 
@@ -77,18 +80,67 @@ public class Car {
             //turnClockwise();
             travelled = 0;
         }
-        velocity = 1f;
-        delta.x += velocity * (float)Math.sin(GeoCalc.directionToRadians(direction));
-        delta.y -= velocity * (float)Math.cos(GeoCalc.directionToRadians(direction));
+
+        velocity = 2f;
+        delta.x += velocity * (float)Math.sin(Calculator.directionToRadians(direction));
+        delta.y -= velocity * (float)Math.cos(Calculator.directionToRadians(direction));
 
         //Update Position
-        position.x += delta.x;
-        position.y += delta.y;
-//        centerPosition.x = position.x + (width / 2f);
-//        centerPosition.y = position.y + (height / 2f);
+        position.add(delta);
+        calculateFrontAndBackPositions();
 
         //Update travelled
         travelled += velocity;
+    }
+
+    private void roadActions() {
+        // Get Road from Current Cell
+        Road road = (Road) currentCell.getSimObject();
+
+        // Anchor
+        float anchor = road.getAnchor(direction);
+        if (direction == Direction.EAST || direction == Direction.WEST) {
+            float diff = anchor - position.y;
+            if (diff != 0) {
+                delta.y += Calculator.capFloat(diff, -1, 1);
+            }
+        } else { // North and South
+            float diff = anchor - position.x;
+            if (diff != 0) {
+                delta.x += Calculator.capFloat(diff, -1, 1);
+            }
+        }
+    }
+
+    private void tunnelActions() {
+        // Get Tunnel from Current Cell
+        Tunnel tunnel = (Tunnel) currentCell.getSimObject();
+
+        // Despawn Car?
+        // If the back of the car is also in the tunnel
+        if (environment.getCellAtPosition(backPosition).getSimObjectType() == SimObjectType.TUNNEL) {
+            tunnel.setCarToDespawn(id);
+        }
+    }
+
+    private void calculateFrontAndBackPositions() {
+        float radiusSine = (length / 2f) * (float)Math.sin(Calculator.directionToRadians(direction));
+        float radiusCosine = (length / 2f) * (float)Math.cos(Calculator.directionToRadians(direction));
+        frontPosition = new Vector2(position.x + radiusSine, position.y - radiusCosine);
+        backPosition = new Vector2(position.x - radiusSine, position.y + radiusCosine);
+    }
+
+    private Vector2 calculateForwardIndex(Vector2 index) {
+        switch (direction) {
+            case NORTH:
+                return index.cpy().add(0, 1);
+            case EAST:
+                return index.cpy().add(1, 0);
+            case WEST:
+                return index.cpy().add(-1, 0);
+            default: // South
+                return index.cpy().add(0, -1);
+        }
     }
 
     private void turnClockwise() {
@@ -109,8 +161,10 @@ public class Car {
     }
 
     public void draw(SpriteBatch spriteBatch) {
-        spriteBatch.draw(texture, position.x - (width / 2f), position.y - (height / 2f), width / 2f, height / 2f, width, height, 1, 1, GeoCalc.directionToDegrees(direction), 0, 0, texture.getWidth(), texture.getHeight(), false, false);
-        spriteBatch.draw(marker, position.x, position.y, 4, 4);
+        spriteBatch.draw(texture, position.x - (width / 2f), position.y - (length / 2f), width / 2f, length / 2f, width, length, 1, 1, Calculator.directionToDegrees(direction), 0, 0, texture.getWidth(), texture.getHeight(), false, false);
+//        spriteBatch.draw(marker, position.x, position.y, 4, 4);
+//        spriteBatch.draw(marker, frontPosition.x, frontPosition.y, 4, 4);
+//        spriteBatch.draw(marker, backPosition.x, backPosition.y, 8, 8);
     }
 
     public void setDirection(Direction direction) {

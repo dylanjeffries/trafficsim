@@ -63,8 +63,8 @@ public class Button {
         }
     }
 
-    public void mouseMoved(Vector3 cursorPos) {
-        hovered = boundingBox.contains(cursorPos);
+    public void mouseMoved(Vector2 cursorPos) {
+        hovered = boundingBox.contains(new Vector3(cursorPos, 0));
     }
 
     public boolean leftClick() {

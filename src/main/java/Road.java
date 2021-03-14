@@ -44,7 +44,7 @@ public class Road extends SimObject {
 
         for (int i = 0; i < length; i++) {
 
-            spriteBatch.draw(texture, drawX, drawY, cellSize/2f, cellSize/2f, cellSize, cellSize, 1, 1, GeoCalc.orientationToDegrees(orientation), 0, 0, texture.getWidth(), texture.getHeight(), false, false);
+            spriteBatch.draw(texture, drawX, drawY, cellSize/2f, cellSize/2f, cellSize, cellSize, 1, 1, Calculator.orientationToDegrees(orientation), 0, 0, texture.getWidth(), texture.getHeight(), false, false);
 
             switch(direction) {
                 case NORTH:

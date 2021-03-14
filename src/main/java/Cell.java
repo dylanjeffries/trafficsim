@@ -1,6 +1,7 @@
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
+import enums.SimObjectType;
 
 public class Cell {
 
@@ -57,11 +58,14 @@ public class Cell {
         this.simObject = simObject;
     }
 
-    public Road getRoad() {
-        return road;
+    public SimObjectType getSimObjectType() {
+        if (simObject != null) {
+            return simObject.getSimObjectType();
+        }
+        return SimObjectType.NONE;
     }
 
-    public void setRoad(Road road) {
-        this.road = road;
+    public Road getRoad() {
+        return road;
     }
 }

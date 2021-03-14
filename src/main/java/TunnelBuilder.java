@@ -12,6 +12,7 @@ public class TunnelBuilder {
     private Texture validTexture;
     private Texture invalidTexture;
     private Texture tunnelTexture;
+    private Texture roadTexture;
     private Texture tunnelTPTexture;
     private float cellSize;
 
@@ -29,6 +30,7 @@ public class TunnelBuilder {
         validTexture = textures.get("build_valid");
         invalidTexture = textures.get("build_invalid");
         tunnelTexture = textures.get("tunnel");
+        roadTexture = textures.get("tunnel_road");
         tunnelTPTexture = textures.get("tunnel_tp");
         cellSize = environment.getGridCellSize();
 
@@ -50,7 +52,7 @@ public class TunnelBuilder {
     public void draw(SpriteBatch spriteBatch, Vector2 buildValidPos) {
         // Draw transparent tunnel
         spriteBatch.draw(tunnelTPTexture, buildValidPos.x, buildValidPos.y, cellSize/2f, cellSize/2f,
-                cellSize, cellSize, 1, 1, GeoCalc.directionToDegrees(direction), 0, 0,
+                cellSize, cellSize, 1, 1, Calculator.directionToDegrees(direction), 0, 0,
                 tunnelTPTexture.getWidth(), tunnelTPTexture.getHeight(), false, false);
 
         // Draw valid or invalid build square
@@ -66,28 +68,28 @@ public class TunnelBuilder {
             newTunnel = new Tunnel('T' + Integer.toString(counter),
                         environment.getCell(cursorIndex),
                         direction,
-                        tunnelTexture);
+                        tunnelTexture,
+                        roadTexture);
             newTunnelReady = true;
         }
         return true;
     }
 
     public void mouseMoved(Vector2 cursorIndex) {
-        buildValid = environment.getCellSimObjectType(cursorIndex) == null;
+        buildValid = environment.getCellSimObjectType(cursorIndex) == SimObjectType.NONE;
     }
 
     private Direction rotateDirection() {
         switch (direction) {
             case NORTH:
                 return Direction.EAST;
-
             case SOUTH:
                 return Direction.WEST;
-
             case WEST:
                 return Direction.NORTH;
+            default: // East
+                return  Direction.SOUTH;
         }
-        return Direction.SOUTH; // West and default
     }
 
     public boolean isNewTunnelReady() {

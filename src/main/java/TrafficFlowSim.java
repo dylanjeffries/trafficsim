@@ -31,8 +31,8 @@ public class TrafficFlowSim extends ApplicationAdapter {
     private boolean leftPressed;
     private boolean rightPressed;
     private boolean middlePressed;
-    private Vector3 cursorScreenPos;
-    private Vector3 cursorEnvPos;
+    private Vector2 cursorScreenPos;
+    private Vector2 cursorEnvPos;
     private Vector2 cursorIndex;
 
     // Modes
@@ -46,10 +46,6 @@ public class TrafficFlowSim extends ApplicationAdapter {
     // Builders
     private RoadBuilder roadBuilder;
     private TunnelBuilder tunnelBuilder;
-
-    // Car Test
-    private Car car;
-    private Car car2;
 
     @Override
     public void create() {
@@ -81,17 +77,6 @@ public class TrafficFlowSim extends ApplicationAdapter {
         // Builders
         roadBuilder = new RoadBuilder(textures, environment);
         tunnelBuilder = new TunnelBuilder(textures, environment);
-
-        // Test Road
-        environment.addRoad(new Road("100",
-                environment.getCell(new Vector2(6, 10)),
-                environment.getCell(new Vector2(20, 10)),
-                textures.get("road")));
-
-        // Test Car
-        car = new Car(environment.getCellPosition(new Vector2(6, 10)), environment, textures);
-        car2 = new Car(environment.getCellPosition(new Vector2(20, 10)), environment, textures);
-        car2.setDirection(Direction.WEST);
     }
 
     private void update() {
@@ -103,8 +88,7 @@ public class TrafficFlowSim extends ApplicationAdapter {
             Gdx.graphics.setWindowedMode(1280, 720);
         }
 
-        // First Updates
-        environment.update();
+        // Toolbar
         toolbar.update();
         buildingMode = toolbar.getBuildingMode();
         simulationMode = toolbar.getSimulationMode();
@@ -112,8 +96,7 @@ public class TrafficFlowSim extends ApplicationAdapter {
         // Simulation Mode Switch
         switch (toolbar.getSimulationMode()) {
             case RUNNING:
-                car.update();
-                car2.update();
+                environment.update();
                 break;
 
             case STOPPED:
@@ -138,17 +121,18 @@ public class TrafficFlowSim extends ApplicationAdapter {
     }
 
     private void draw() {
-        //Clear Buffer
+        // Clear Buffer
         Gdx.gl.glClearColor(backgroundColor.getDecimalR(), backgroundColor.getDecimalG(), backgroundColor.getDecimalB(), backgroundColor.getA());
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        //Camera Draws
+        // World Draws
         spriteBatch.begin();
         spriteBatch.setProjectionMatrix(camera.combined);
 
+        // Draw Environment Ground (Level 0)
         environment.draw(spriteBatch);
 
-        // Simulation Mode Switch
+        // Draw Select Square or Builders (Level 1)
         switch (toolbar.getSimulationMode()) {
             case STOPPED:
                 // Building Mode Switch
@@ -172,15 +156,13 @@ public class TrafficFlowSim extends ApplicationAdapter {
                 break;
         }
 
-        car.draw(spriteBatch);
-        car2.draw(spriteBatch);
-
-        //Static Draws
+        // UI Draws (Static to the camera)
         spriteBatch.setProjectionMatrix(staticMatrix);
 
+        // Draw Toolbar
         toolbar.draw(spriteBatch);
 
-        //Debug
+        // Debug
         debugFont.draw(spriteBatch, "Mode: " + toolbar.getBuildingMode(), 10, 60);
         debugFont.draw(spriteBatch, Gdx.graphics.getFramesPerSecond() + " FPS", 10, 30);
 
@@ -263,8 +245,9 @@ public class TrafficFlowSim extends ApplicationAdapter {
 
             @Override
             public boolean mouseMoved(int screenX, int screenY) {
-                cursorScreenPos = new Vector3(screenX, Math.abs(screenY - VIRTUAL_HEIGHT), 0);
-                cursorEnvPos = camera.unproject(new Vector3(screenX, screenY, 0));
+                cursorScreenPos = new Vector2(screenX, Math.abs(screenY - VIRTUAL_HEIGHT));
+                Vector3 cursorEnvPosVector3 = camera.unproject(new Vector3(screenX, screenY, 0));
+                cursorEnvPos = new Vector2(cursorEnvPosVector3.x, cursorEnvPosVector3.y);
                 cursorIndex = environment.getIndexAtPosition(cursorEnvPos);
 
                 toolbar.mouseMoved(cursorScreenPos);

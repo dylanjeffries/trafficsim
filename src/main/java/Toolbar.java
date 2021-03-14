@@ -123,7 +123,7 @@ public class Toolbar {
         button.activate();
     }
 
-    public void mouseMoved(Vector3 cursorPos) {
+    public void mouseMoved(Vector2 cursorPos) {
         // Building Buttons
         selectButton.mouseMoved(cursorPos);
         roadButton.mouseMoved(cursorPos);

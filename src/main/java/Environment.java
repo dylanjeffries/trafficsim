@@ -1,10 +1,6 @@
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.InputAdapter;
-import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
-import enums.BuildingMode;
+import enums.Direction;
 import enums.SimObjectType;
 
 import java.util.HashMap;
@@ -18,6 +14,7 @@ public class Environment {
     private HashMap<Vector2, Cell> grid;
 
     //SimObjects
+    private HashMap<String, Car> cars;
     private HashMap<String, Road> roads;
     private HashMap<String, Tunnel> tunnels;
 
@@ -36,28 +33,75 @@ public class Environment {
             }
         }
 
+        cars = new HashMap<String, Car>();
         roads = new HashMap<String, Road>();
         tunnels = new HashMap<String, Tunnel>();
+
+        // Test Road
+        addRoad(new Road("100",
+                getCell(new Vector2(2, 2)),
+                getCell(new Vector2(8, 2)),
+                textures.get("road")));
+
+        addRoad(new Road("200",
+                getCell(new Vector2(9, 2)),
+                getCell(new Vector2(9, 8)),
+                textures.get("road")));
+
+        addRoad(new Road("300",
+                getCell(new Vector2(9, 9)),
+                getCell(new Vector2(3, 9)),
+                textures.get("road")));
+
+        addRoad(new Road("400",
+                getCell(new Vector2(2, 9)),
+                getCell(new Vector2(2, 3)),
+                textures.get("road")));
+
+        // Test Cars
+        cars.put("C1T3", new Car("C1T3", getCellPosition(new Vector2(2, 2)), Direction.EAST, this, textures));
+        //cars.put("C2T3", new Car("C2T3", getCellPosition(new Vector2(20, 10)), Direction.WEST, this, textures));
     }
 
     public void update() {
+        // Tunnels
+        for (Tunnel tunnel : tunnels.values()) {
+            if (!tunnel.getCarToDespawn().equals("")) {
+                cars.remove(tunnel.getCarToDespawn());
+                tunnel.setCarToDespawn("");
+            }
+        }
 
+        // Cars
+        for (Car car : cars.values()) {
+            car.update();
+        }
     }
 
     public void draw(SpriteBatch spriteBatch) {
-        //Grid
+        // Grid (Level 0)
         for (Cell cell : grid.values()) {
             cell.draw(spriteBatch);
         }
 
-        //Roads
+        // Roads (Level 1)
         for (Road road : roads.values()) {
             road.draw(spriteBatch);
         }
 
-        //Tunnels
+        // Tunnel Roads (Level 2)
         for (Tunnel tunnel : tunnels.values()) {
-            tunnel.draw(spriteBatch);
+            tunnel.drawGround(spriteBatch);
+        }
+
+        // Cars (Level 3)
+        for (Car car : cars.values()) {
+            car.draw(spriteBatch);
+        }
+
+        // Tunnel Tunnels (Level 4)
+        for (Tunnel tunnel : tunnels.values()) {
+            tunnel.drawAerial(spriteBatch);
         }
     }
 
@@ -72,7 +116,7 @@ public class Environment {
     public void addRoad(Road road) {
         roads.put(road.getId(), road);
         for (Vector2 v : road.getCellIndices()) {
-            grid.get(v).setRoad(road);
+            grid.get(v).setSimObject(road);
         }
     }
 
@@ -81,16 +125,15 @@ public class Environment {
         grid.get(tunnel.getCell().getIndex()).setSimObject(tunnel);
     }
 
-    public Vector2 getIndexAtPositionSafe(Vector3 pos) {
+    public Vector2 getIndexAtPositionSafe(Vector2 pos) {
         Vector2 index = new Vector2((int)(pos.x/gridCellSize), (int)(pos.y/gridCellSize));
-        System.out.println(index);
         if (grid.containsKey(index)) {
             return index;
         }
         return new Vector2(1, 1);
     }
 
-    public Vector2 getIndexAtPosition(Vector3 pos) {
+    public Vector2 getIndexAtPosition(Vector2 pos) {
         return new Vector2((int)(pos.x/gridCellSize), (int)(pos.y/gridCellSize));
     }
 
@@ -99,7 +142,7 @@ public class Environment {
     }
 
     public Cell getCellAtPosition(Vector2 pos) {
-        return grid.get(getIndexAtPosition(new Vector3(pos, 0)));
+        return grid.get(getIndexAtPosition(pos));
     }
 
     public Vector2 getCellPosition(Vector2 index) {
@@ -113,7 +156,7 @@ public class Environment {
                 return simObject.getSimObjectType();
             }
         }
-        return null;
+        return SimObjectType.NONE;
     }
 
     public int getGridCellSize() {
