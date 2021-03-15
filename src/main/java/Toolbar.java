@@ -17,12 +17,15 @@ public class Toolbar {
     private float buttonSize;
     private float buttonY;
 
+    // Building Mode
     private BuildingMode buildingMode;
     private Button selectButton;
     private Button roadButton;
     private Button tunnelButton;
 
+    // Simulation Mode
     private SimulationMode simulationMode;
+    private SimulationMode previousSimulationMode;
     private Button pauseButton;
     private Button playButton;
     private Button stopButton;
@@ -60,11 +63,15 @@ public class Toolbar {
                 textures.get("stop_inactive"), textures.get("stop_active"), textures.get("stop_hover"), textures.get("stop_disabled"));
 
         simulationMode = SimulationMode.STOPPED;
+        previousSimulationMode = SimulationMode.STOPPED;
         pauseButton.disable();
         stopButton.activate();
     }
 
     public void update() {
+        // Set Previous Simulation Mode
+        previousSimulationMode = simulationMode;
+
         // Building Buttons Logic
         if (selectButton.isClicked()) {
             buildingButtonClicked(selectButton, BuildingMode.SELECT);
@@ -84,6 +91,10 @@ public class Toolbar {
             simulationButtonClicked(stopButton, SimulationMode.STOPPED);
             pauseButton.disable();
         }
+
+
+//        System.out.println("Current " + simulationMode);
+//        System.out.println("Prev " + previousSimulationMode);
     }
 
     public void draw(SpriteBatch spriteBatch) {
@@ -147,8 +158,10 @@ public class Toolbar {
     public BuildingMode getBuildingMode() {
         return buildingMode;
     }
-
     public SimulationMode getSimulationMode() {
         return simulationMode;
+    }
+    public SimulationMode getPreviousSimulationMode() {
+        return previousSimulationMode;
     }
 }

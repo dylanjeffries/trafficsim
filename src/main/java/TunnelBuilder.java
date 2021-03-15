@@ -9,11 +9,7 @@ import enums.SimObjectType;
 public class TunnelBuilder {
 
     // Graphics
-    private Texture validTexture;
-    private Texture invalidTexture;
-    private Texture tunnelTexture;
-    private Texture roadTexture;
-    private Texture tunnelTPTexture;
+    private Textures textures;
     private float cellSize;
 
     // Environment
@@ -27,14 +23,9 @@ public class TunnelBuilder {
     private boolean buildValid;
 
     public TunnelBuilder(Textures textures, Environment environment) {
-        validTexture = textures.get("build_valid");
-        invalidTexture = textures.get("build_invalid");
-        tunnelTexture = textures.get("tunnel");
-        roadTexture = textures.get("tunnel_road");
-        tunnelTPTexture = textures.get("tunnel_tp");
-        cellSize = environment.getGridCellSize();
-
+        this.textures = textures;
         this.environment = environment;
+        cellSize = environment.getGridCellSize();
 
         counter = 1;
         direction = Direction.SOUTH;
@@ -51,15 +42,15 @@ public class TunnelBuilder {
 
     public void draw(SpriteBatch spriteBatch, Vector2 buildValidPos) {
         // Draw transparent tunnel
-        spriteBatch.draw(tunnelTPTexture, buildValidPos.x, buildValidPos.y, cellSize/2f, cellSize/2f,
+        spriteBatch.draw(textures.get("tunnel_tp"), buildValidPos.x, buildValidPos.y, cellSize/2f, cellSize/2f,
                 cellSize, cellSize, 1, 1, Calculator.directionToDegrees(direction), 0, 0,
-                tunnelTPTexture.getWidth(), tunnelTPTexture.getHeight(), false, false);
+                textures.get("tunnel_tp").getWidth(), textures.get("tunnel_tp").getHeight(), false, false);
 
         // Draw valid or invalid build square
         if (buildValid) {
-            spriteBatch.draw(validTexture, buildValidPos.x, buildValidPos.y, cellSize, cellSize);
+            spriteBatch.draw(textures.get("build_valid"), buildValidPos.x, buildValidPos.y, cellSize, cellSize);
         } else {
-            spriteBatch.draw(invalidTexture, buildValidPos.x, buildValidPos.y, cellSize, cellSize);
+            spriteBatch.draw(textures.get("build_invalid"), buildValidPos.x, buildValidPos.y, cellSize, cellSize);
         }
     }
 
@@ -68,8 +59,8 @@ public class TunnelBuilder {
             newTunnel = new Tunnel('T' + Integer.toString(counter),
                         environment.getCell(cursorIndex),
                         direction,
-                        tunnelTexture,
-                        roadTexture);
+                        environment,
+                        textures);
             newTunnelReady = true;
         }
         return true;

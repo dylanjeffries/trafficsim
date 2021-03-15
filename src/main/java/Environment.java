@@ -38,34 +38,24 @@ public class Environment {
         tunnels = new HashMap<String, Tunnel>();
 
         // Test Road
-        addRoad(new Road("100",
-                getCell(new Vector2(2, 2)),
-                getCell(new Vector2(8, 2)),
-                textures.get("road")));
-
-        addRoad(new Road("200",
-                getCell(new Vector2(9, 2)),
-                getCell(new Vector2(9, 8)),
-                textures.get("road")));
-
-        addRoad(new Road("300",
-                getCell(new Vector2(9, 9)),
-                getCell(new Vector2(3, 9)),
-                textures.get("road")));
-
-        addRoad(new Road("400",
-                getCell(new Vector2(2, 9)),
-                getCell(new Vector2(2, 3)),
-                textures.get("road")));
+//        addRoad(new Road("100",
+//                getCell(new Vector2(2, 2)),
+//                getCell(new Vector2(8, 2)),
+//                textures.get("road")));
 
         // Test Cars
-        cars.put("C1T3", new Car("C1T3", getCellPosition(new Vector2(2, 2)), Direction.EAST, this, textures));
+        //cars.put("C1T3", new Car("C1T3", getCellPosition(new Vector2(2, 2)), Direction.EAST, this, textures));
         //cars.put("C2T3", new Car("C2T3", getCellPosition(new Vector2(20, 10)), Direction.WEST, this, textures));
     }
 
     public void update() {
         // Tunnels
         for (Tunnel tunnel : tunnels.values()) {
+            tunnel.update();
+            if (tunnel.getCarToSpawn() != null) {
+                cars.put(tunnel.getCarToSpawn().getId(), tunnel.getCarToSpawn());
+                tunnel.setCarToSpawn(null);
+            }
             if (!tunnel.getCarToDespawn().equals("")) {
                 cars.remove(tunnel.getCarToDespawn());
                 tunnel.setCarToDespawn("");
@@ -111,6 +101,18 @@ public class Environment {
 
     public void resize(int width, int height) {
 
+    }
+
+    public void compile() {
+        // Determine connections
+        // Tunnels
+        for (Tunnel tunnel : tunnels.values()) {
+            tunnel.compile();
+        }
+        // Roads
+        for (Road road : roads.values()) {
+            road.compile(this);
+        }
     }
 
     public void addRoad(Road road) {

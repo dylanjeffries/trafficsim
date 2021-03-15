@@ -96,7 +96,12 @@ public class TrafficFlowSim extends ApplicationAdapter {
         // Simulation Mode Switch
         switch (toolbar.getSimulationMode()) {
             case RUNNING:
-                environment.update();
+                if (toolbar.getPreviousSimulationMode() == SimulationMode.STOPPED)
+                {
+                    environment.compile();
+                } else {
+                    environment.update();
+                }
                 break;
 
             case STOPPED:

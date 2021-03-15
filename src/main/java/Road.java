@@ -10,15 +10,18 @@ import java.util.HashMap;
 
 public class Road extends SimObject {
 
+    // Environment
     private Cell startCell;
     private Cell endCell;
+    private ArrayList<String> connections;
 
+    // Geometry
     private Orientation orientation;
     private Direction direction;
     private int length;
     private HashMap<Direction, Float> anchors;
 
-    //Drawing
+    // Drawing
     private Texture texture;
     private int cellSize;
 
@@ -27,6 +30,7 @@ public class Road extends SimObject {
         this.startCell = startCell;
         this.endCell = endCell;
         this.texture = texture;
+        connections = new ArrayList<String>();
         cellSize = Config.getInteger("cell_size");
         orientation = calculateOrientation();
         direction = calculateDirection();
@@ -63,20 +67,24 @@ public class Road extends SimObject {
         }
     }
 
-    public boolean compile(HashMap<Vector2, Cell> grid, HashMap<String, Road> roads) {
-        //Next Road
-//        if (cells..getSimObjectID() != null) {
-//            if (endCell.getSimObjectID().charAt(0) == 'E') { //Endpoint
-//                nextRoad = roads.get(endCell.getSimObjectID());
-//            } else { //Road
-//                nextRoad = roads.get(endCell.getSimObjectID());
-//            }
-//        } else {
-//            return false;
-//        }
-//
-//        return true;
-        return true;
+    public void compile(Environment environment) {
+        // Clear connections
+        connections.clear();
+
+        // Start connection
+        Cell tempCell = environment.getCell(calculateIndexInDirection(startCell.getIndex(), Calculator.flipDirection(direction)));
+        if (tempCell.getSimObjectType() != SimObjectType.NONE) {
+            connections.add(tempCell.getSimObject().getId());
+        }
+
+        // End connection
+        tempCell = environment.getCell(calculateIndexInDirection(endCell.getIndex(), direction));
+        if (tempCell.getSimObjectType() != SimObjectType.NONE) {
+            connections.add(tempCell.getSimObject().getId());
+        }
+
+        System.out.println("For " + id);
+        System.out.println(connections.toString());
     }
 
     private Orientation calculateOrientation() {
@@ -126,6 +134,19 @@ public class Road extends SimObject {
         anchors.put(Direction.EAST, startCell.getY() + (quarter * 3));
         anchors.put(Direction.SOUTH, startCell.getX() + (quarter * 3));
         anchors.put(Direction.WEST, startCell.getY() + quarter);
+    }
+
+    private Vector2 calculateIndexInDirection(Vector2 index, Direction direction) {
+        switch (direction) {
+            case NORTH:
+                return index.cpy().add(0, 1);
+            case EAST:
+                return index.cpy().add(1, 0);
+            case WEST:
+                return index.cpy().add(-1, 0);
+            default: // South
+                return index.cpy().add(0, -1);
+        }
     }
 
     public void recalculate() {
@@ -189,42 +210,4 @@ public class Road extends SimObject {
     public void setTexture(Texture texture) {
         this.texture = texture;
     }
-
-    //    public float getDirection(float x, float y) {
-//        return GeoCalc.getStraightAngle(cells.get(0).getCenterX(),
-//                cells.get(0).getCenterY(),
-//                cells.get(cells.size()-1).getCenterX(),
-//                cells.get(cells.size()-1).getCenterY());
-//    }
-//
-//    public boolean intersectsEnd(float currentX, float currentY, float nextX, float nextY) {
-//        return cells.get(cells.size()-1).getCenterX() >= Math.min(currentX, nextX)
-//                && cells.get(cells.size()-1).getCenterX() <= Math.max(currentX, nextX)
-//                && cells.get(cells.size()-1).getCenterY() <= Math.max(currentY, nextY)
-//                && cells.get(cells.size()-1).getCenterY() >= Math.min(currentY, nextY);
-//    }
-//
-//    public float getDeltaX(float currentX) {
-//        return cells.get(cells.size()-1).getCenterX() - currentX;
-//    }
-//
-//    public float getDeltaY(float currentY) {
-//        return currentY - cells.get(cells.size()-1).getCenterY();
-//    }
-
-//    public Road getNextRoad() {
-//        return nextRoad;
-//    }
-//
-//    public void setNextRoad(Road nextRoad) {
-//        this.nextRoad = nextRoad;
-//    }
-
-//    public Cell getCell() {
-//        return cells.get(0);
-//    }
-//
-//    public Cell getEndCell() {
-//        return cells.get(cells.size()-1);
-//    }
 }

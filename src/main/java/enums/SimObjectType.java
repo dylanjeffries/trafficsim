@@ -4,5 +4,6 @@ public enum SimObjectType {
     NONE,
     CAR,
     ROAD,
-    TUNNEL;
+    TUNNEL,
+    INTERSECTION;
 }

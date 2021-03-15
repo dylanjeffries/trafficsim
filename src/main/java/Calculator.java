@@ -27,13 +27,10 @@ public class Calculator {
                 && checkY >= Math.min(currentY, nextY);
     }
 
-    // Direction and Orientation Enum conversion to angles
+    // Direction and Orientation Conversions
     public static float orientationToDegrees(Orientation orientation) {
-        switch(orientation) {
-            case HORIZONTAL:
-                return 90f;
-            case VERTICAL:
-                return 0f;
+        if (orientation == Orientation.HORIZONTAL) {
+            return 90f;
         }
         return 0f;
     }
@@ -44,12 +41,11 @@ public class Calculator {
                 return 180f;
             case EAST:
                 return 90f;
-            case SOUTH:
-                return 0f;
             case WEST:
                 return 270f;
+            default: // South
+                return 0f;
         }
-        return 0f;
     }
 
     public static float orientationToRadians(Orientation orientation) {
@@ -58,6 +54,19 @@ public class Calculator {
 
     public static float directionToRadians(Direction direction) {
         return (float)Math.toRadians(directionToDegrees(direction));
+    }
+
+    public static Direction flipDirection(Direction direction) {
+        switch (direction) {
+            case NORTH:
+                return Direction.SOUTH;
+            case EAST:
+                return Direction.WEST;
+            case WEST:
+                return Direction.EAST;
+            default: // South
+                return Direction.NORTH;
+        }
     }
 
     // Value Cap
