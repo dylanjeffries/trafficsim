@@ -1,3 +1,5 @@
+package com.trafficsim;
+
 public class ColorData {
 
     float r;

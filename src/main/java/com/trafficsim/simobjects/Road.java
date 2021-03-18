@@ -1,9 +1,15 @@
+package com.trafficsim.simobjects;
+
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
-import enums.Direction;
-import enums.Orientation;
-import enums.SimObjectType;
+import com.trafficsim.Calculator;
+import com.trafficsim.Cell;
+import com.trafficsim.Config;
+import com.trafficsim.Environment;
+import com.trafficsim.enums.Direction;
+import com.trafficsim.enums.Orientation;
+import com.trafficsim.enums.SimObjectType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,12 +19,10 @@ public class Road extends SimObject {
     // Environment
     private Cell startCell;
     private Cell endCell;
-    private ArrayList<String> connections;
 
     // Geometry
     private Orientation orientation;
     private Direction direction;
-    private int length;
     private HashMap<Direction, Float> anchors;
 
     // Drawing
@@ -26,15 +30,14 @@ public class Road extends SimObject {
     private int cellSize;
 
     public Road(String id, Cell startCell, Cell endCell, Texture texture) {
-        super(id, SimObjectType.ROAD);
+        super(id, SimObjectType.ROAD, 1);
         this.startCell = startCell;
         this.endCell = endCell;
         this.texture = texture;
-        connections = new ArrayList<String>();
         cellSize = Config.getInteger("cell_size");
         orientation = calculateOrientation();
         direction = calculateDirection();
-        length = calculateLength();
+        cellLength = calculateLength();
         calculateAnchors();
     }
 
@@ -46,9 +49,11 @@ public class Road extends SimObject {
         float drawX = startCell.getX();
         float drawY = startCell.getY();
 
-        for (int i = 0; i < length; i++) {
+        for (int i = 0; i < cellLength; i++) {
 
-            spriteBatch.draw(texture, drawX, drawY, cellSize/2f, cellSize/2f, cellSize, cellSize, 1, 1, Calculator.orientationToDegrees(orientation), 0, 0, texture.getWidth(), texture.getHeight(), false, false);
+            spriteBatch.draw(texture, drawX, drawY, cellSize/2f, cellSize/2f, cellSize, cellSize,
+                    1, 1, Calculator.orientationToDegrees(orientation), 0, 0,
+                    texture.getWidth(), texture.getHeight(), false, false);
 
             switch(direction) {
                 case NORTH:
@@ -83,8 +88,8 @@ public class Road extends SimObject {
             connections.add(tempCell.getSimObject().getId());
         }
 
-        System.out.println("For " + id);
-        System.out.println(connections.toString());
+//        System.out.println("For " + id);
+//        System.out.println(connections.toString());
     }
 
     private Orientation calculateOrientation() {
@@ -152,7 +157,7 @@ public class Road extends SimObject {
     public void recalculate() {
         orientation = calculateOrientation();
         direction = calculateDirection();
-        length = calculateLength();
+        cellLength = calculateLength();
         calculateAnchors();
     }
 
@@ -167,7 +172,7 @@ public class Road extends SimObject {
         ArrayList<Vector2> cellIndices = new ArrayList<Vector2>();
         int indexX = (int)startCell.getIndex().x;
         int indexY = (int)startCell.getIndex().y;
-        for (int i = 0; i < length; i++) {
+        for (int i = 0; i < cellLength; i++) {
 
             cellIndices.add(new Vector2(indexX, indexY));
 

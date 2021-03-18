@@ -1,7 +1,11 @@
+package com.trafficsim;
+
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
-import enums.SimObjectType;
+import com.trafficsim.enums.SimObjectType;
+import com.trafficsim.simobjects.Road;
+import com.trafficsim.simobjects.SimObject;
 
 public class Cell {
 

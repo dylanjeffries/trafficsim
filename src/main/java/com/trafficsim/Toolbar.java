@@ -1,12 +1,11 @@
+package com.trafficsim;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
-import enums.BuildingMode;
-import enums.SimulationMode;
-
-import java.util.ArrayList;
+import com.trafficsim.enums.BuildingMode;
+import com.trafficsim.enums.SimulationMode;
 
 public class Toolbar {
 
@@ -22,6 +21,7 @@ public class Toolbar {
     private Button selectButton;
     private Button roadButton;
     private Button tunnelButton;
+    private Button intersectionButton;
 
     // Simulation Mode
     private SimulationMode simulationMode;
@@ -47,6 +47,9 @@ public class Toolbar {
 
         tunnelButton = new Button(100 + (height * 2), buttonY, buttonSize, buttonSize, false,
                 textures.get("tunnel_inactive"), textures.get("tunnel_active"), textures.get("tunnel_hover"), textures.get("tunnel_disabled"));
+
+        intersectionButton = new Button(100 + (height * 3), buttonY, buttonSize, buttonSize, false,
+                textures.get("intersection_inactive"), textures.get("intersection_active"), textures.get("intersection_hover"), textures.get("intersection_disabled"));
 
         buildingMode = BuildingMode.SELECT;
         selectButton.activate();
@@ -79,6 +82,8 @@ public class Toolbar {
             buildingButtonClicked(roadButton, BuildingMode.ROAD);
         } else if (tunnelButton.isClicked()) {
             buildingButtonClicked(tunnelButton, BuildingMode.TUNNEL);
+        }  else if (intersectionButton.isClicked()) {
+            buildingButtonClicked(intersectionButton, BuildingMode.INTERSECTION);
         }
 
         // Simulation Buttons Logic
@@ -91,10 +96,6 @@ public class Toolbar {
             simulationButtonClicked(stopButton, SimulationMode.STOPPED);
             pauseButton.disable();
         }
-
-
-//        System.out.println("Current " + simulationMode);
-//        System.out.println("Prev " + previousSimulationMode);
     }
 
     public void draw(SpriteBatch spriteBatch) {
@@ -105,6 +106,7 @@ public class Toolbar {
         selectButton.draw(spriteBatch);
         roadButton.draw(spriteBatch);
         tunnelButton.draw(spriteBatch);
+        intersectionButton.draw(spriteBatch);
 
         // Simulation Buttons
         pauseButton.draw(spriteBatch);
@@ -119,6 +121,7 @@ public class Toolbar {
         selectButton.deactivate();
         roadButton.deactivate();
         tunnelButton.deactivate();
+        intersectionButton.deactivate();
         // Activate clicked button
         button.activate();
     }
@@ -139,6 +142,7 @@ public class Toolbar {
         selectButton.mouseMoved(cursorPos);
         roadButton.mouseMoved(cursorPos);
         tunnelButton.mouseMoved(cursorPos);
+        intersectionButton.mouseMoved(cursorPos);
 
         // Simulation Buttons
         pauseButton.mouseMoved(cursorPos);
@@ -150,6 +154,7 @@ public class Toolbar {
         return selectButton.leftClick() ||
                 roadButton.leftClick() ||
                 tunnelButton.leftClick() ||
+                intersectionButton.leftClick() ||
                 pauseButton.leftClick() ||
                 playButton.leftClick() ||
                 stopButton.leftClick();

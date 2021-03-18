@@ -1,36 +1,37 @@
+package com.trafficsim.builders;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
-import enums.Direction;
-import enums.SimObjectType;
+import com.trafficsim.Calculator;
+import com.trafficsim.Environment;
+import com.trafficsim.Textures;
+import com.trafficsim.simobjects.Tunnel;
+import com.trafficsim.enums.Direction;
+import com.trafficsim.enums.SimObjectType;
 
 public class TunnelBuilder {
 
-    // Graphics
-    private Textures textures;
-    private float cellSize;
-
     // Environment
     private Environment environment;
+
+    // Graphics
+    private Textures textures;
 
     // Building
     private int counter;
     private Direction direction;
     private Tunnel newTunnel;
-    private boolean newTunnelReady;
-    private boolean buildValid;
+    private boolean valid;
 
-    public TunnelBuilder(Textures textures, Environment environment) {
-        this.textures = textures;
+    public TunnelBuilder(Environment environment, Textures textures) {
         this.environment = environment;
-        cellSize = environment.getGridCellSize();
+        this.textures = textures;
 
         counter = 1;
         direction = Direction.SOUTH;
-        newTunnelReady = false;
-        buildValid = false;
+        valid = false;
     }
 
     public void update() {
@@ -42,32 +43,35 @@ public class TunnelBuilder {
 
     public void draw(SpriteBatch spriteBatch, Vector2 buildValidPos) {
         // Draw transparent tunnel
-        spriteBatch.draw(textures.get("tunnel_tp"), buildValidPos.x, buildValidPos.y, cellSize/2f, cellSize/2f,
-                cellSize, cellSize, 1, 1, Calculator.directionToDegrees(direction), 0, 0,
+        spriteBatch.draw(textures.get("tunnel_tp"), buildValidPos.x, buildValidPos.y,
+                environment.getGridCellSize()/2f, environment.getGridCellSize()/2f,
+                environment.getGridCellSize(), environment.getGridCellSize(), 1, 1,
+                Calculator.directionToDegrees(direction), 0, 0,
                 textures.get("tunnel_tp").getWidth(), textures.get("tunnel_tp").getHeight(), false, false);
 
         // Draw valid or invalid build square
-        if (buildValid) {
-            spriteBatch.draw(textures.get("build_valid"), buildValidPos.x, buildValidPos.y, cellSize, cellSize);
+        if (valid) {
+            spriteBatch.draw(textures.get("build_valid"), buildValidPos.x, buildValidPos.y,
+                    environment.getGridCellSize(), environment.getGridCellSize());
         } else {
-            spriteBatch.draw(textures.get("build_invalid"), buildValidPos.x, buildValidPos.y, cellSize, cellSize);
+            spriteBatch.draw(textures.get("build_invalid"), buildValidPos.x, buildValidPos.y,
+                    environment.getGridCellSize(), environment.getGridCellSize());
         }
     }
 
     public boolean leftClick(Vector2 cursorIndex) {
-        if (buildValid) {
+        if (valid) {
             newTunnel = new Tunnel('T' + Integer.toString(counter),
                         environment.getCell(cursorIndex),
                         direction,
                         environment,
                         textures);
-            newTunnelReady = true;
         }
         return true;
     }
 
     public void mouseMoved(Vector2 cursorIndex) {
-        buildValid = environment.getCellSimObjectType(cursorIndex) == SimObjectType.NONE;
+        valid = environment.getCellSimObjectType(cursorIndex) == SimObjectType.NONE;
     }
 
     private Direction rotateDirection() {
@@ -84,13 +88,12 @@ public class TunnelBuilder {
     }
 
     public boolean isNewTunnelReady() {
-        return newTunnelReady;
+        return newTunnel != null;
     }
 
     public Tunnel getNewTunnel() {
         Tunnel newTunnelCopy = new Tunnel(newTunnel); //Copy the new tunnel
         newTunnel = null;
-        newTunnelReady = false;
         counter++;
         return newTunnelCopy;
     }

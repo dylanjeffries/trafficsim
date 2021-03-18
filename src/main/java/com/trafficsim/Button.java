@@ -1,3 +1,5 @@
+package com.trafficsim;
+
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.tiled.TiledMap;
@@ -50,14 +52,14 @@ public class Button {
 
 
     public void draw(SpriteBatch spriteBatch) {
-        if (!enabled) { //Button Disabled
+        if (!enabled) { //com.trafficsim.Button Disabled
             spriteBatch.draw(disabledTexture, pos.x, pos.y, boundingBox.getWidth(), boundingBox.getHeight());
-        } else if (active) { //Button Active
+        } else if (active) { //com.trafficsim.Button Active
             spriteBatch.draw(activeTexture, pos.x, pos.y, boundingBox.getWidth(), boundingBox.getHeight());
         } else {
-            if (hovered) { //Button Hovered
+            if (hovered) { //com.trafficsim.Button Hovered
                 spriteBatch.draw(hoverTexture, pos.x, pos.y, boundingBox.getWidth(), boundingBox.getHeight());
-            } else { //Button Inactive
+            } else { //com.trafficsim.Button Inactive
                 spriteBatch.draw(inactiveTexture, pos.x, pos.y, boundingBox.getWidth(), boundingBox.getHeight());
             }
         }

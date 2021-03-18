@@ -1,8 +1,11 @@
+package com.trafficsim.simobjects;
+
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
-import enums.Direction;
-import enums.SimObjectType;
+import com.trafficsim.*;
+import com.trafficsim.enums.Direction;
+import com.trafficsim.enums.SimObjectType;
 
 public class Car extends SimObject {
 
@@ -25,6 +28,7 @@ public class Car extends SimObject {
     private Environment environment;
     private Cell currentCell;
     private Cell forwardCell;
+    private Route route;
 
     // Drawing
     private Texture texture;
@@ -35,20 +39,21 @@ public class Car extends SimObject {
     private float travelled;
 
 
-    public Car(String id, Vector2 position, Direction direction, Environment environment, Textures textures) {
-        super(id, SimObjectType.CAR);
-        this.position = position;
+    public Car(String id, Vector2 position, Direction direction, Route route, Environment environment, Textures textures) {
+        super(id, SimObjectType.CAR, 0);
+        this.position = position.cpy();
         this.environment = environment;
         delta = new Vector2(0, 0);
 
-        width = 24;
-        length = 48;
+        width = Config.getInteger("car_width");
+        length = Config.getInteger("car_length");
 
         velocity = 0;
         acceleration = 0;
         this.direction = direction;
 
         calculateFrontAndBackPositions();
+        this.route = route;
 
         texture = textures.get("car_pink");
         marker = textures.get("marker");
@@ -60,11 +65,11 @@ public class Car extends SimObject {
         // Reset delta
         delta.set(0, 0);
 
-        // Current and Forward Cell
+        // Current and Forward com.trafficsim.Cell
         currentCell = environment.getCellAtPosition(frontPosition);
         forwardCell = environment.getCell(calculateForwardIndex(environment.getIndexAtPosition(frontPosition)));
 
-        // Current Cell Actions
+        // Current com.trafficsim.Cell Actions
         switch (currentCell.getSimObjectType()) {
             case ROAD:
                 roadActions();
@@ -94,7 +99,7 @@ public class Car extends SimObject {
     }
 
     private void roadActions() {
-        // Get Road from Current Cell
+        // Get com.trafficsim.simobjects.Road from Current com.trafficsim.Cell
         Road road = (Road) currentCell.getSimObject();
 
         // Anchor
@@ -113,13 +118,16 @@ public class Car extends SimObject {
     }
 
     private void tunnelActions() {
-        // Get Tunnel from Current Cell
+        // Get com.trafficsim.simobjects.Tunnel from Current com.trafficsim.Cell
         Tunnel tunnel = (Tunnel) currentCell.getSimObject();
 
-        // Despawn Car?
-        // If the back of the car is also in the tunnel
-        if (environment.getCellAtPosition(backPosition).getSimObjectType() == SimObjectType.TUNNEL) {
-            tunnel.setCarToDespawn(id);
+        // Despawn com.trafficsim.simobjects.Car?
+        // If the tunnel is the ending node for this car's route
+        if (route.isEndTunnel(tunnel.getId())) {
+            // If the back of the car is also in the tunnel
+            if (environment.getCellAtPosition(backPosition).getSimObjectType() == SimObjectType.TUNNEL) {
+                tunnel.setCarToDespawn(id);
+            }
         }
     }
 

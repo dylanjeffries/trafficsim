@@ -1,8 +1,11 @@
+package com.trafficsim.simobjects;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
-import enums.Direction;
-import enums.SimObjectType;
+import com.trafficsim.*;
+import com.trafficsim.enums.Direction;
+import com.trafficsim.enums.SimObjectType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,7 +15,6 @@ public class Tunnel extends SimObject {
     // Environment
     private Environment environment;
     private Cell cell;
-    private ArrayList<String> connections;
 
     // Geometry
     private Direction direction;
@@ -23,6 +25,7 @@ public class Tunnel extends SimObject {
     private int carCounter;
     private Car carToSpawn;
     private String carToDespawn;
+    private ArrayList<Route> routes;
     private float timer;
     private int interval;
 
@@ -31,15 +34,16 @@ public class Tunnel extends SimObject {
     private int cellSize;
 
     public Tunnel(String id, Cell cell, Direction direction, Environment environment, Textures textures) {
-        super(id, SimObjectType.TUNNEL);
+        super(id, SimObjectType.TUNNEL, 1);
         this.environment = environment;
         this.textures = textures;
         this.cell = cell;
         this.direction = direction;
-        connections = new ArrayList<String>();
         carCounter = 1;
         carToSpawn = null;
         carToDespawn = "";
+        routes = new ArrayList<Route>();
+
         cellSize = Config.getInteger("cell_size");
         calculateAnchors();
         spawnPosition = calculateSpawnPosition();
@@ -58,7 +62,9 @@ public class Tunnel extends SimObject {
         if (timer >= interval) {
             System.out.println("spawn");
             // Set carToSpawn
-            carToSpawn = new Car('C' + carCounter + id, spawnPosition, direction, environment, textures);
+            System.out.println(spawnPosition.toString());
+            carToSpawn = new Car("C" + carCounter + id, spawnPosition, direction, routes.get(0), environment, textures);
+            carCounter++;
             // Reset Timer
             timer = 0;
         }
@@ -77,17 +83,37 @@ public class Tunnel extends SimObject {
     }
 
     public void compile() {
-        // Clear connections
-        connections.clear();
+        // Clear routes
+        routes.clear();
 
-        // Get cell in the forwards index, if cell contains a road, add the road's id to connections
+        // Get cell in the forwards index
         Cell forwardCell = environment.getCell(calculateForwardIndex(cell.getIndex()));
-        if (forwardCell.getSimObjectType() == SimObjectType.ROAD) {
-            connections.add(forwardCell.getSimObject().getId());
-        }
 
-        System.out.println("For " + id);
-        System.out.println(connections.toString());
+        // If forward cell contains a road, commence route finding
+        if (forwardCell.getSimObjectType() == SimObjectType.ROAD) {
+            // Find routes to other tunnels using forward SimObject's id and a base route containing self
+            calculateRoutes(forwardCell.getSimObject().getId(), new Route(this));
+        }
+    }
+
+    private void calculateRoutes(String id, Route route) {
+        // If id is not already in route
+        if (!route.contains(id)) {
+            // Copy route to newRoute, get SimObject related to id and add SimObject to newRoute
+            Route newRoute = new Route(route);
+            SimObject simObject = environment.getSimObject(id);
+            newRoute.addSimObject(simObject);
+            // If SimObject is a tunnel
+            if (simObject.getSimObjectType() == SimObjectType.TUNNEL) {
+                // Stop searching and add route to routes
+                routes.add(newRoute);
+            } else {
+                // Investigate the current SimObject's connections
+                for (String connection : simObject.getConnections()) {
+                    calculateRoutes(connection, newRoute);
+                }
+            }
+        }
     }
 
     private void calculateAnchors() {

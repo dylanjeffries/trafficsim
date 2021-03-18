@@ -1,6 +1,7 @@
-import enums.Cardinal;
-import enums.Direction;
-import enums.Orientation;
+package com.trafficsim;
+
+import com.trafficsim.enums.Direction;
+import com.trafficsim.enums.Orientation;
 
 public class Calculator {
 

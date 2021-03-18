@@ -1,4 +1,4 @@
-package enums;
+package com.trafficsim.enums;
 
 public enum SimObjectType {
     NONE,

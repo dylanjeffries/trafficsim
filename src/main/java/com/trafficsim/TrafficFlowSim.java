@@ -1,3 +1,8 @@
+package com.trafficsim;
+
+import com.trafficsim.builders.IntersectionBuilder;
+import com.trafficsim.builders.RoadBuilder;
+import com.trafficsim.builders.TunnelBuilder;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -9,9 +14,8 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import enums.BuildingMode;
-import enums.Direction;
-import enums.SimulationMode;
+import com.trafficsim.enums.BuildingMode;
+import com.trafficsim.enums.SimulationMode;
 
 public class TrafficFlowSim extends ApplicationAdapter {
 
@@ -46,6 +50,7 @@ public class TrafficFlowSim extends ApplicationAdapter {
     // Builders
     private RoadBuilder roadBuilder;
     private TunnelBuilder tunnelBuilder;
+    private IntersectionBuilder intersectionBuilder;
 
     @Override
     public void create() {
@@ -75,8 +80,9 @@ public class TrafficFlowSim extends ApplicationAdapter {
         toolbar = new Toolbar(0, Gdx.graphics.getHeight() - Config.getInteger("toolbar_height"), textures);
 
         // Builders
-        roadBuilder = new RoadBuilder(textures, environment);
-        tunnelBuilder = new TunnelBuilder(textures, environment);
+        roadBuilder = new RoadBuilder(environment, textures);
+        tunnelBuilder = new TunnelBuilder(environment, textures);
+        intersectionBuilder = new IntersectionBuilder(environment, textures);
     }
 
     private void update() {
@@ -120,6 +126,13 @@ public class TrafficFlowSim extends ApplicationAdapter {
                             environment.addTunnel(tunnelBuilder.getNewTunnel());
                         }
                         break;
+
+                    case INTERSECTION:
+                        intersectionBuilder.update();
+                        if (intersectionBuilder.isNewIntersectionReady()) {
+                            environment.addIntersection(intersectionBuilder.getNewIntersection());
+                        }
+                        break;
                 }
                 break;
         }
@@ -156,6 +169,10 @@ public class TrafficFlowSim extends ApplicationAdapter {
 
                     case TUNNEL:
                         tunnelBuilder.draw(spriteBatch, environment.getCellPosition(cursorIndex));
+                        break;
+
+                    case INTERSECTION:
+                        intersectionBuilder.draw(spriteBatch, environment.getCellPosition(cursorIndex));
                         break;
                 }
                 break;
@@ -213,6 +230,10 @@ public class TrafficFlowSim extends ApplicationAdapter {
                             case TUNNEL:
                                 tunnelBuilder.leftClick(cursorIndex);
                                 break;
+
+                            case INTERSECTION:
+                                intersectionBuilder.leftClick(cursorIndex);
+                                break;
                         }
                     }
 
@@ -263,6 +284,9 @@ public class TrafficFlowSim extends ApplicationAdapter {
 
                     case TUNNEL:
                         tunnelBuilder.mouseMoved(cursorIndex);
+
+                    case INTERSECTION:
+                        intersectionBuilder.mouseMoved(cursorIndex);
                 }
 
                 return super.mouseMoved(screenX, screenY);

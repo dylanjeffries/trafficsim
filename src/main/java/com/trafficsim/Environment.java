@@ -1,7 +1,9 @@
+package com.trafficsim;
+
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
-import enums.Direction;
-import enums.SimObjectType;
+import com.trafficsim.enums.SimObjectType;
+import com.trafficsim.simobjects.*;
 
 import java.util.HashMap;
 
@@ -17,6 +19,7 @@ public class Environment {
     private HashMap<String, Car> cars;
     private HashMap<String, Road> roads;
     private HashMap<String, Tunnel> tunnels;
+    private HashMap<String, Intersection> intersections;
 
     public Environment(Textures textures) {
         //Grid
@@ -36,6 +39,7 @@ public class Environment {
         cars = new HashMap<String, Car>();
         roads = new HashMap<String, Road>();
         tunnels = new HashMap<String, Tunnel>();
+        intersections = new HashMap<String, Intersection>();
 
         // Test Road
 //        addRoad(new Road("100",
@@ -69,27 +73,34 @@ public class Environment {
     }
 
     public void draw(SpriteBatch spriteBatch) {
-        // Grid (Level 0)
+        // Grid
         for (Cell cell : grid.values()) {
             cell.draw(spriteBatch);
         }
 
-        // Roads (Level 1)
+        // Roads
         for (Road road : roads.values()) {
             road.draw(spriteBatch);
         }
 
-        // Tunnel Roads (Level 2)
+
+        // Tunnel Roads
         for (Tunnel tunnel : tunnels.values()) {
             tunnel.drawGround(spriteBatch);
         }
 
-        // Cars (Level 3)
+        // Intersection Roads
+        for (Intersection intersection : intersections.values()) {
+            intersection.draw(spriteBatch);
+        }
+
+        // Cars
         for (Car car : cars.values()) {
+            //System.out.println(car.getId());
             car.draw(spriteBatch);
         }
 
-        // Tunnel Tunnels (Level 4)
+        // Tunnel Tunnels
         for (Tunnel tunnel : tunnels.values()) {
             tunnel.drawAerial(spriteBatch);
         }
@@ -105,13 +116,17 @@ public class Environment {
 
     public void compile() {
         // Determine connections
-        // Tunnels
-        for (Tunnel tunnel : tunnels.values()) {
-            tunnel.compile();
-        }
         // Roads
         for (Road road : roads.values()) {
             road.compile(this);
+        }
+        // Intersections
+        for (Intersection intersection : intersections.values()) {
+            intersection.compile();
+        }
+        // Tunnels
+        for (Tunnel tunnel : tunnels.values()) {
+            tunnel.compile();
         }
     }
 
@@ -127,24 +142,26 @@ public class Environment {
         grid.get(tunnel.getCell().getIndex()).setSimObject(tunnel);
     }
 
-    public Vector2 getIndexAtPositionSafe(Vector2 pos) {
-        Vector2 index = new Vector2((int)(pos.x/gridCellSize), (int)(pos.y/gridCellSize));
-        if (grid.containsKey(index)) {
-            return index;
-        }
-        return new Vector2(1, 1);
-    }
-
-    public Vector2 getIndexAtPosition(Vector2 pos) {
-        return new Vector2((int)(pos.x/gridCellSize), (int)(pos.y/gridCellSize));
+    public void addIntersection(Intersection intersection) {
+        intersections.put(intersection.getId(), intersection);
+        grid.get(intersection.getCell().getIndex()).setSimObject(intersection);
     }
 
     public Cell getCell(Vector2 index) {
-        return grid.get(index);
+        return grid.containsKey(index) ? grid.get(index) : grid.get(new Vector2(1, 1));
+    }
+
+    public Vector2 getIndexAtPosition(Vector2 pos) {
+        Vector2 index = new Vector2((int)(pos.x/gridCellSize), (int)(pos.y/gridCellSize));
+        return grid.containsKey(index) ? index : new Vector2(1, 1);
     }
 
     public Cell getCellAtPosition(Vector2 pos) {
         return grid.get(getIndexAtPosition(pos));
+    }
+
+    public boolean isIndexInGrid(Vector2 index) {
+        return grid.containsKey(index);
     }
 
     public Vector2 getCellPosition(Vector2 index) {
@@ -161,17 +178,21 @@ public class Environment {
         return SimObjectType.NONE;
     }
 
-    public int getGridCellSize() {
-        return gridCellSize;
+    public SimObject getSimObject(String id) {
+        switch (id.charAt(0)) {
+            case 'R': // Road
+                return roads.containsKey(id) ? roads.get(id) : null;
+
+            case 'T': // Tunnel
+                return tunnels.containsKey(id) ? tunnels.get(id) : null;
+
+            case 'I': // Intersection
+                return intersections.containsKey(id) ? intersections.get(id) : null;
+        }
+        return null;
     }
 
-    public boolean cellHasRoad(Vector2 index) {
-        if (grid.containsKey(index)) {
-            SimObject simObject = grid.get(index).getSimObject();
-            if (simObject != null) {
-                return simObject.getSimObjectType() == SimObjectType.ROAD;
-            }
-        }
-        return false;
+    public int getGridCellSize() {
+        return gridCellSize;
     }
 }
