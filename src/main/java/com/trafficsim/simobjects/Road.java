@@ -77,13 +77,13 @@ public class Road extends SimObject {
         connections.clear();
 
         // Start connection
-        Cell tempCell = environment.getCell(calculateIndexInDirection(startCell.getIndex(), Calculator.flipDirection(direction)));
+        Cell tempCell = environment.getCell(Calculator.getIndexInDirection(startCell.getIndex(), Calculator.flipDirection(direction)));
         if (tempCell.getSimObjectType() != SimObjectType.NONE) {
             connections.add(tempCell.getSimObject().getId());
         }
 
         // End connection
-        tempCell = environment.getCell(calculateIndexInDirection(endCell.getIndex(), direction));
+        tempCell = environment.getCell(Calculator.getIndexInDirection(endCell.getIndex(), direction));
         if (tempCell.getSimObjectType() != SimObjectType.NONE) {
             connections.add(tempCell.getSimObject().getId());
         }
@@ -139,19 +139,6 @@ public class Road extends SimObject {
         anchors.put(Direction.EAST, startCell.getY() + (quarter * 3));
         anchors.put(Direction.SOUTH, startCell.getX() + (quarter * 3));
         anchors.put(Direction.WEST, startCell.getY() + quarter);
-    }
-
-    private Vector2 calculateIndexInDirection(Vector2 index, Direction direction) {
-        switch (direction) {
-            case NORTH:
-                return index.cpy().add(0, 1);
-            case EAST:
-                return index.cpy().add(1, 0);
-            case WEST:
-                return index.cpy().add(-1, 0);
-            default: // South
-                return index.cpy().add(0, -1);
-        }
     }
 
     public void recalculate() {

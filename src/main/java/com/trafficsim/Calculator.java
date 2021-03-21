@@ -1,5 +1,6 @@
 package com.trafficsim;
 
+import com.badlogic.gdx.math.Vector2;
 import com.trafficsim.enums.Direction;
 import com.trafficsim.enums.Orientation;
 
@@ -75,5 +76,19 @@ public class Calculator {
         if (value < min) { return min; }
         else if (value > max) { return max; }
         return value;
+    }
+
+    // Index Directions
+    public static Vector2 getIndexInDirection(Vector2 index, Direction direction) {
+        switch (direction) {
+            case NORTH:
+                return index.cpy().add(0, 1);
+            case EAST:
+                return index.cpy().add(1, 0);
+            case WEST:
+                return index.cpy().add(-1, 0);
+            default: // South
+                return index.cpy().add(0, -1);
+        }
     }
 }

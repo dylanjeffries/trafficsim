@@ -18,6 +18,7 @@ public class Intersection extends SimObject {
 
     // Geometry
     private HashMap<Direction, Float> anchors;
+    private HashMap<String, Direction> adjacentDirections;
 
     // Drawing
     private Textures textures;
@@ -31,6 +32,7 @@ public class Intersection extends SimObject {
 
         cellSize = Config.getInteger("cell_size");
         calculateAnchors();
+        adjacentDirections = new HashMap<String, Direction>();
     }
 
     public Intersection(Intersection tunnel) {
@@ -48,10 +50,19 @@ public class Intersection extends SimObject {
         connections.clear();
 
         // Adjacent connections
-        for (Vector2 v : calculateAdjacentIndices(cell.getIndex())) {
-            Cell tempCell = environment.getCell(v);
+        processAdjacentConnection(Direction.NORTH);
+        processAdjacentConnection(Direction.EAST);
+        processAdjacentConnection(Direction.SOUTH);
+        processAdjacentConnection(Direction.WEST);
+    }
+
+    private void processAdjacentConnection(Direction direction) {
+        Vector2 index = Calculator.getIndexInDirection(cell.getIndex(), direction);
+        if (environment.isIndexInGrid(index)) {
+            Cell tempCell = environment.getCell(index);
             if (tempCell.getSimObjectType() != SimObjectType.NONE) {
                 connections.add(tempCell.getSimObject().getId());
+                adjacentDirections.put(tempCell.getSimObject().getId(), direction);
             }
         }
     }
@@ -65,25 +76,8 @@ public class Intersection extends SimObject {
         anchors.put(Direction.WEST, cell.getY() + quarter);
     }
 
-    private ArrayList<Vector2> calculateAdjacentIndices(Vector2 index) {
-        ArrayList<Vector2> adjacentIndices = new ArrayList<Vector2>();
-        // North
-        if (environment.isIndexInGrid(index.cpy().add(0, 1))) {
-            adjacentIndices.add(index.cpy().add(0, 1));
-        }
-        // East
-        if (environment.isIndexInGrid(index.cpy().add(1, 0))) {
-            adjacentIndices.add(index.cpy().add(1, 0));
-        }
-        // South
-        if (environment.isIndexInGrid(index.cpy().add(0, -1))) {
-            adjacentIndices.add(index.cpy().add(0, -1));
-        }
-        // West
-        if (environment.isIndexInGrid(index.cpy().add(-1, 0))) {
-            adjacentIndices.add(index.cpy().add(-1, 0));
-        }
-        return adjacentIndices;
+    public Direction getNextDirection(String nextId) {
+        return adjacentDirections.get(nextId);
     }
 
     public String getId() {

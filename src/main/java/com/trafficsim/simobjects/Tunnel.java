@@ -9,6 +9,7 @@ import com.trafficsim.enums.SimObjectType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Random;
 
 public class Tunnel extends SimObject {
 
@@ -49,7 +50,7 @@ public class Tunnel extends SimObject {
         spawnPosition = calculateSpawnPosition();
 
         timer = 0;
-        interval = 5;
+        interval = 2;
     }
 
     public Tunnel(Tunnel tunnel) {
@@ -60,10 +61,9 @@ public class Tunnel extends SimObject {
         // Timer
         timer += Gdx.graphics.getDeltaTime();
         if (timer >= interval) {
-            System.out.println("spawn");
             // Set carToSpawn
-            System.out.println(spawnPosition.toString());
-            carToSpawn = new Car("C" + carCounter + id, spawnPosition, direction, routes.get(0), environment, textures);
+            Random r = new Random();
+            carToSpawn = new Car("C" + carCounter + id, spawnPosition, direction, routes.get(r.nextInt(routes.size()-1)), environment, textures);
             carCounter++;
             // Reset Timer
             timer = 0;
@@ -87,7 +87,7 @@ public class Tunnel extends SimObject {
         routes.clear();
 
         // Get cell in the forwards index
-        Cell forwardCell = environment.getCell(calculateForwardIndex(cell.getIndex()));
+        Cell forwardCell = environment.getCell(Calculator.getIndexInDirection(cell.getIndex(), direction));
 
         // If forward cell contains a road, commence route finding
         if (forwardCell.getSimObjectType() == SimObjectType.ROAD) {
@@ -130,19 +130,6 @@ public class Tunnel extends SimObject {
             return new Vector2(cell.getCenterX(), anchors.get(direction));
         }
         return new Vector2(anchors.get(direction), cell.getCenterY());
-    }
-
-    private Vector2 calculateForwardIndex(Vector2 index) {
-        switch (direction) {
-            case NORTH:
-                return index.cpy().add(0, 1);
-            case EAST:
-                return index.cpy().add(1, 0);
-            case WEST:
-                return index.cpy().add(-1, 0);
-            default: // South
-                return index.cpy().add(0, -1);
-        }
     }
 
     public String getId() {

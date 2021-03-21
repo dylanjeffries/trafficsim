@@ -28,7 +28,13 @@ public class Car extends SimObject {
     private Environment environment;
     private Cell currentCell;
     private Cell forwardCell;
+    private SimObjectType previousCellSimObjectType;
     private Route route;
+
+    // Turning
+    private boolean turnRequired;
+    private Direction turnDirection;
+    private float turnAnchor;
 
     // Drawing
     private Texture texture;
@@ -43,17 +49,22 @@ public class Car extends SimObject {
         super(id, SimObjectType.CAR, 0);
         this.position = position.cpy();
         this.environment = environment;
-        delta = new Vector2(0, 0);
 
         width = Config.getInteger("car_width");
         length = Config.getInteger("car_length");
 
+        delta = new Vector2(0, 0);
         velocity = 0;
         acceleration = 0;
         this.direction = direction;
 
         calculateFrontAndBackPositions();
+        currentCell = environment.getCellAtPosition(frontPosition);
         this.route = route;
+
+        turnRequired = false;
+        turnDirection = direction;
+        turnAnchor = 0;
 
         texture = textures.get("car_pink");
         marker = textures.get("marker");
@@ -65,26 +76,26 @@ public class Car extends SimObject {
         // Reset delta
         delta.set(0, 0);
 
-        // Current and Forward com.trafficsim.Cell
+        // Previous Cell Type, Current Cell and Forward Cell
+        previousCellSimObjectType = currentCell.getSimObjectType();
         currentCell = environment.getCellAtPosition(frontPosition);
-        forwardCell = environment.getCell(calculateForwardIndex(environment.getIndexAtPosition(frontPosition)));
+        forwardCell = environment.getCell(Calculator.getIndexInDirection(environment.getIndexAtPosition(frontPosition), direction));
 
-        // Current com.trafficsim.Cell Actions
+        // Current Cell Actions
         switch (currentCell.getSimObjectType()) {
             case ROAD:
                 roadActions();
                 break;
-
             case TUNNEL:
                 tunnelActions();
                 break;
+            case INTERSECTION:
+                intersectionActions();
+                break;
         }
 
-        // Check for turn
-        if (travelled >= 300) {
-            //turnClockwise();
-            travelled = 0;
-        }
+        // Executing a queued turn
+        if (turnRequired) { executeTurn(); }
 
         velocity = 2f;
         delta.x += velocity * (float)Math.sin(Calculator.directionToRadians(direction));
@@ -99,7 +110,7 @@ public class Car extends SimObject {
     }
 
     private void roadActions() {
-        // Get com.trafficsim.simobjects.Road from Current com.trafficsim.Cell
+        // Get Road from Current Cell
         Road road = (Road) currentCell.getSimObject();
 
         // Anchor
@@ -118,10 +129,10 @@ public class Car extends SimObject {
     }
 
     private void tunnelActions() {
-        // Get com.trafficsim.simobjects.Tunnel from Current com.trafficsim.Cell
+        // Get Tunnel from Current Cell
         Tunnel tunnel = (Tunnel) currentCell.getSimObject();
 
-        // Despawn com.trafficsim.simobjects.Car?
+        // Despawn Car?
         // If the tunnel is the ending node for this car's route
         if (route.isEndTunnel(tunnel.getId())) {
             // If the back of the car is also in the tunnel
@@ -131,24 +142,54 @@ public class Car extends SimObject {
         }
     }
 
+    private void intersectionActions() {
+        // Get Intersection from Current Cell
+        Intersection intersection = (Intersection) currentCell.getSimObject();
+
+        // If first update in this intersection
+        if (currentCell.getSimObjectType() != previousCellSimObjectType) {
+            turnDirection = intersection.getNextDirection(route.getIdAfter(intersection.getId()));
+            turnRequired = direction != turnDirection;
+            turnAnchor = intersection.getAnchor(turnDirection);
+        }
+    }
+
+    private void executeTurn() {
+        switch (direction) {
+            case NORTH:
+                if (turnAnchor - position.y <= 0) {
+                    direction = turnDirection;
+                    turnRequired = false;
+                }
+                break;
+            case EAST:
+                if (turnAnchor - position.x <= 0) {
+                    System.out.println(id);
+                    direction = turnDirection;
+                    turnRequired = false;
+                }
+                break;
+            case SOUTH:
+                if (turnAnchor - position.y >= 0) {
+                    System.out.println(id);
+                    direction = turnDirection;
+                    turnRequired = false;
+                }
+                break;
+            case WEST:
+                if (turnAnchor - position.x >= 0) {
+                    direction = turnDirection;
+                    turnRequired = false;
+                }
+                break;
+        }
+    }
+
     private void calculateFrontAndBackPositions() {
         float radiusSine = (length / 2f) * (float)Math.sin(Calculator.directionToRadians(direction));
         float radiusCosine = (length / 2f) * (float)Math.cos(Calculator.directionToRadians(direction));
         frontPosition = new Vector2(position.x + radiusSine, position.y - radiusCosine);
         backPosition = new Vector2(position.x - radiusSine, position.y + radiusCosine);
-    }
-
-    private Vector2 calculateForwardIndex(Vector2 index) {
-        switch (direction) {
-            case NORTH:
-                return index.cpy().add(0, 1);
-            case EAST:
-                return index.cpy().add(1, 0);
-            case WEST:
-                return index.cpy().add(-1, 0);
-            default: // South
-                return index.cpy().add(0, -1);
-        }
     }
 
     private void turnClockwise() {

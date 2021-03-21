@@ -33,6 +33,15 @@ public class Route {
         return ids.get(ids.size() - 1).equals(id);
     }
 
+    public String getIdAfter(String id) {
+        for (int i = 0; i < ids.size(); i++) {
+            if (ids.get(i).equals(id)) {
+                return ids.get(i + 1);
+            }
+        }
+        return "";
+    }
+
     public String toString() {
         return ids.toString() + " Length: " + length;
     }
