@@ -1,5 +1,6 @@
 package com.trafficsim.simobjects;
 
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.trafficsim.enums.SimObjectType;
 
 import java.util.ArrayList;
@@ -16,6 +17,10 @@ public class SimObject {
         this.simObjectType = simObjectType;
         this.cellLength = cellLength;
         connections = new ArrayList<String>();
+    }
+
+    public Table getSidebarTable() {
+        return new Table();
     }
 
     public String getId() {

@@ -100,7 +100,7 @@ public class Toolbar {
 
     public void draw(SpriteBatch spriteBatch) {
         // Toolbar
-        spriteBatch.draw(texture, pos.x, pos.y, Gdx.graphics.getDisplayMode().width, height);
+        spriteBatch.draw(texture, pos.x, pos.y, Config.getInteger("v_width"), height);
 
         // Building Buttons
         selectButton.draw(spriteBatch);

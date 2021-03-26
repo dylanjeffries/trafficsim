@@ -1,8 +1,12 @@
 package com.trafficsim.simobjects;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.trafficsim.*;
 import com.trafficsim.enums.Direction;
 import com.trafficsim.enums.SimObjectType;
@@ -27,8 +31,8 @@ public class Tunnel extends SimObject {
     private Car carToSpawn;
     private String carToDespawn;
     private ArrayList<Route> routes;
+    private float rate;
     private float timer;
-    private int interval;
 
     // Drawing
     private Textures textures;
@@ -49,8 +53,8 @@ public class Tunnel extends SimObject {
         calculateAnchors();
         spawnPosition = calculateSpawnPosition();
 
+        rate = 30;
         timer = 0;
-        interval = 2;
     }
 
     public Tunnel(Tunnel tunnel) {
@@ -60,10 +64,10 @@ public class Tunnel extends SimObject {
     public void update() {
         // Timer
         timer += Gdx.graphics.getDeltaTime();
-        if (timer >= interval) {
+        if (timer >= (60 / rate)) {
             // Set carToSpawn
             Random r = new Random();
-            carToSpawn = new Car("C" + carCounter + id, spawnPosition, direction, routes.get(r.nextInt(routes.size()-1)), environment, textures);
+            carToSpawn = new Car("C" + carCounter + id, spawnPosition, direction, routes.get(r.nextInt(routes.size())), environment, textures);
             carCounter++;
             // Reset Timer
             timer = 0;
@@ -94,6 +98,34 @@ public class Tunnel extends SimObject {
             // Find routes to other tunnels using forward SimObject's id and a base route containing self
             calculateRoutes(forwardCell.getSimObject().getId(), new Route(this));
         }
+    }
+
+    @Override
+    public Table getSidebarTable() {
+        Table table = new Table();
+        table.padTop(50);
+
+        Label nameLabel = new Label("Tunnel " + id, UIStyling.TITLE_LABEL_STYLE);
+        table.add(nameLabel).colspan(2).pad(30);
+        table.row();
+
+        Label label = new Label("Spawns\nper Minute: ", UIStyling.BODY_LABEL_STYLE);
+        TextField textField = new TextField(String.valueOf(rate), UIStyling.TEXTFIELD_STYLE);
+        textField.setTextFieldListener(new TextField.TextFieldListener() {
+            @Override
+            public void keyTyped(TextField textField, char c) {
+                if (textField.getText().equals("")) {
+                    rate = 0;
+                } else {
+                    rate = Integer.parseInt(textField.getText());
+                }
+            }
+        });
+        textField.setTextFieldFilter(new TextField.TextFieldFilter.DigitsOnlyFilter());
+        table.add(label);
+        table.add(textField);
+
+        return table;
     }
 
     private void calculateRoutes(String id, Route route) {

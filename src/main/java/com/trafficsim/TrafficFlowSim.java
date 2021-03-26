@@ -1,34 +1,29 @@
 package com.trafficsim;
 
-import com.trafficsim.builders.IntersectionBuilder;
-import com.trafficsim.builders.RoadBuilder;
-import com.trafficsim.builders.TunnelBuilder;
-import com.badlogic.gdx.ApplicationAdapter;
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
-import com.badlogic.gdx.InputAdapter;
-import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.*;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.trafficsim.builders.IntersectionBuilder;
+import com.trafficsim.builders.RoadBuilder;
+import com.trafficsim.builders.TunnelBuilder;
 import com.trafficsim.enums.BuildingMode;
+import com.trafficsim.enums.SimObjectType;
 import com.trafficsim.enums.SimulationMode;
 
 public class TrafficFlowSim extends ApplicationAdapter {
 
-    final float VIRTUAL_WIDTH = 1920;
-    final float VIRTUAL_HEIGHT = 1080;
+    private Environment environment;
 
     // Graphics
     private Textures textures;
     private SpriteBatch spriteBatch;
     private BoundedCamera camera;
     private Matrix4 staticMatrix;
-
-    private BitmapFont debugFont;
     private ColorData backgroundColor;
 
     // Mouse and Cursor
@@ -43,14 +38,15 @@ public class TrafficFlowSim extends ApplicationAdapter {
     private BuildingMode buildingMode;
     private SimulationMode simulationMode;
 
-    private Environment environment;
-
-    private Toolbar toolbar;
-
     // Builders
     private RoadBuilder roadBuilder;
     private TunnelBuilder tunnelBuilder;
     private IntersectionBuilder intersectionBuilder;
+
+    // UI
+    private InputMultiplexer inputMultiplexer;
+    private Toolbar toolbar;
+    private Sidebar sidebar;
 
     @Override
     public void create() {
@@ -66,23 +62,24 @@ public class TrafficFlowSim extends ApplicationAdapter {
                 (Config.getInteger("grid_height") * Config.getInteger("cell_size")), 0);
         staticMatrix = spriteBatch.getProjectionMatrix().cpy();
 
-        debugFont = generateFont("arial.ttf", 24);
-        debugFont.setColor(Color.BLACK);
         backgroundColor = new ColorData(255, 255, 255, 1);
-
-        // Input
-        setInputProcessor();
 
         // Environment
         environment = new Environment(textures);
-
-        // Toolbar
-        toolbar = new Toolbar(0, Gdx.graphics.getHeight() - Config.getInteger("toolbar_height"), textures);
 
         // Builders
         roadBuilder = new RoadBuilder(environment, textures);
         tunnelBuilder = new TunnelBuilder(environment, textures);
         intersectionBuilder = new IntersectionBuilder(environment, textures);
+
+        // Input and UI
+        UIStyling.init(textures);
+        inputMultiplexer = new InputMultiplexer();
+        inputMultiplexer.addProcessor(createMainInputProcessor());
+        Gdx.input.setInputProcessor(inputMultiplexer);
+
+        toolbar = new Toolbar(0, Gdx.graphics.getHeight() - Config.getInteger("toolbar_height"), textures);
+        sidebar = new Sidebar(textures);
     }
 
     private void update() {
@@ -93,6 +90,9 @@ public class TrafficFlowSim extends ApplicationAdapter {
         if (Gdx.input.isKeyJustPressed(Input.Keys.W)) {
             Gdx.graphics.setWindowedMode(1280, 720);
         }
+
+        // Sidebar
+        sidebar.update();
 
         // Toolbar
         toolbar.update();
@@ -181,12 +181,13 @@ public class TrafficFlowSim extends ApplicationAdapter {
         // UI Draws (Static to the camera)
         spriteBatch.setProjectionMatrix(staticMatrix);
 
-        // Draw Toolbar
+        // Draw Sidebar and Toolbar
+        sidebar.draw(spriteBatch);
         toolbar.draw(spriteBatch);
 
         // Debug
-        debugFont.draw(spriteBatch, "Mode: " + toolbar.getBuildingMode(), 10, 60);
-        debugFont.draw(spriteBatch, Gdx.graphics.getFramesPerSecond() + " FPS", 10, 30);
+        UIStyling.BODY_FONT.draw(spriteBatch, "Mode: " + toolbar.getBuildingMode(), 10, 60);
+        UIStyling.BODY_FONT.draw(spriteBatch, Gdx.graphics.getFramesPerSecond() + " FPS", 10, 30);
 
         spriteBatch.end();
     }
@@ -199,7 +200,7 @@ public class TrafficFlowSim extends ApplicationAdapter {
 
     @Override
     public void resize(int width, int height) {
-        camera.setToOrtho(false, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+        camera.setToOrtho(false, Config.getInteger("v_width"), Config.getInteger("v_height"));
         spriteBatch.setProjectionMatrix(camera.combined);
     }
 
@@ -211,8 +212,8 @@ public class TrafficFlowSim extends ApplicationAdapter {
         textures.dispose();
     }
 
-    private void setInputProcessor() {
-        Gdx.input.setInputProcessor(new InputAdapter() {
+    private InputAdapter createMainInputProcessor() {
+         return new InputAdapter() {
 
             @Override
             public boolean touchDown(int screenX, int screenY, int pointer, int button) {
@@ -223,6 +224,15 @@ public class TrafficFlowSim extends ApplicationAdapter {
                     // If a toolbar button was not clicked and the simulation is stopped
                     if (!toolbarClicked && toolbar.getSimulationMode() == SimulationMode.STOPPED) {
                         switch (toolbar.getBuildingMode()) {
+                            case SELECT:
+                                Cell tempCell = environment.getCell(cursorIndex);
+                                if (tempCell.getSimObjectType() != SimObjectType.NONE) {
+                                    sidebar.setSimObject(tempCell.getSimObject());
+                                    sidebar.show();
+                                } else {
+                                    sidebar.setSimObject(null);
+                                    sidebar.hide();
+                                }
                             case ROAD:
                                 roadBuilder.leftClick(cursorIndex);
                                 break;
@@ -271,7 +281,7 @@ public class TrafficFlowSim extends ApplicationAdapter {
 
             @Override
             public boolean mouseMoved(int screenX, int screenY) {
-                cursorScreenPos = new Vector2(screenX, Math.abs(screenY - VIRTUAL_HEIGHT));
+                cursorScreenPos = new Vector2(screenX, Math.abs(screenY - Config.getInteger("v_height")));
                 Vector3 cursorEnvPosVector3 = camera.unproject(new Vector3(screenX, screenY, 0));
                 cursorEnvPos = new Vector2(cursorEnvPosVector3.x, cursorEnvPosVector3.y);
                 cursorIndex = environment.getIndexAtPosition(cursorEnvPos);
@@ -291,7 +301,7 @@ public class TrafficFlowSim extends ApplicationAdapter {
 
                 return super.mouseMoved(screenX, screenY);
             }
-        });
+        };
     }
 
     private BitmapFont generateFont(String fontFileName, int fontSize) {
