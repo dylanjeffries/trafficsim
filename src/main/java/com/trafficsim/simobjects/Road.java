@@ -3,10 +3,10 @@ package com.trafficsim.simobjects;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
-import com.trafficsim.Calculator;
-import com.trafficsim.Cell;
-import com.trafficsim.Config;
-import com.trafficsim.Environment;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
+import com.trafficsim.*;
 import com.trafficsim.enums.Direction;
 import com.trafficsim.enums.Orientation;
 import com.trafficsim.enums.SimObjectType;
@@ -87,9 +87,18 @@ public class Road extends SimObject {
         if (tempCell.getSimObjectType() != SimObjectType.NONE) {
             connections.add(tempCell.getSimObject().getId());
         }
+    }
 
-//        System.out.println("For " + id);
-//        System.out.println(connections.toString());
+    @Override
+    public Table getSidebarTable() {
+        Table table = new Table();
+        table.padTop(50);
+
+        Label nameLabel = new Label("Road " + id, UIStyling.TITLE_LABEL_STYLE);
+        table.add(nameLabel).colspan(2).pad(30);
+        table.row();
+
+        return table;
     }
 
     private Orientation calculateOrientation() {

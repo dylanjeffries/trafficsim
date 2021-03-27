@@ -31,7 +31,7 @@ public class Tunnel extends SimObject {
     private Car carToSpawn;
     private String carToDespawn;
     private ArrayList<Route> routes;
-    private float rate;
+    private int rate;
     private float timer;
 
     // Drawing
@@ -64,7 +64,7 @@ public class Tunnel extends SimObject {
     public void update() {
         // Timer
         timer += Gdx.graphics.getDeltaTime();
-        if (timer >= (60 / rate)) {
+        if (timer >= (60f / rate)) {
             // Set carToSpawn
             Random r = new Random();
             carToSpawn = new Car("C" + carCounter + id, spawnPosition, direction, routes.get(r.nextInt(routes.size())), environment, textures);

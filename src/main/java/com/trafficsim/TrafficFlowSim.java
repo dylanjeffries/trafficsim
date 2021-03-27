@@ -185,10 +185,6 @@ public class TrafficFlowSim extends ApplicationAdapter {
         sidebar.draw(spriteBatch);
         toolbar.draw(spriteBatch);
 
-        // Debug
-        UIStyling.BODY_FONT.draw(spriteBatch, "Mode: " + toolbar.getBuildingMode(), 10, 60);
-        UIStyling.BODY_FONT.draw(spriteBatch, Gdx.graphics.getFramesPerSecond() + " FPS", 10, 30);
-
         spriteBatch.end();
     }
 
@@ -221,13 +217,15 @@ public class TrafficFlowSim extends ApplicationAdapter {
                     leftPressed = true;
                     boolean toolbarClicked = toolbar.leftClick();
 
+                    // Get cell at click position
+                    Cell cursorCell = environment.getCell(cursorIndex);
+
                     // If a toolbar button was not clicked and the simulation is stopped
                     if (!toolbarClicked && toolbar.getSimulationMode() == SimulationMode.STOPPED) {
                         switch (toolbar.getBuildingMode()) {
                             case SELECT:
-                                Cell tempCell = environment.getCell(cursorIndex);
-                                if (tempCell.getSimObjectType() != SimObjectType.NONE) {
-                                    sidebar.setSimObject(tempCell.getSimObject());
+                                if (cursorCell.getSimObjectType() != SimObjectType.NONE) {
+                                    sidebar.setSimObject(cursorCell.getSimObject());
                                     sidebar.show();
                                 } else {
                                     sidebar.setSimObject(null);
@@ -244,6 +242,11 @@ public class TrafficFlowSim extends ApplicationAdapter {
                             case INTERSECTION:
                                 intersectionBuilder.leftClick(cursorIndex);
                                 break;
+
+                            case BULLDOZE:
+                                if (cursorCell.getSimObjectType() != SimObjectType.NONE) {
+                                    environment.deleteSimObject(cursorCell.getSimObject().getId());
+                                }
                         }
                     }
 

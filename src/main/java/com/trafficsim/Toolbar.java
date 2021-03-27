@@ -22,6 +22,7 @@ public class Toolbar {
     private Button roadButton;
     private Button tunnelButton;
     private Button intersectionButton;
+    private Button bulldozeButton;
 
     // Simulation Mode
     private SimulationMode simulationMode;
@@ -50,6 +51,9 @@ public class Toolbar {
 
         intersectionButton = new Button(100 + (height * 3), buttonY, buttonSize, buttonSize, false,
                 textures.get("intersection_inactive"), textures.get("intersection_active"), textures.get("intersection_hover"), textures.get("intersection_disabled"));
+
+        bulldozeButton = new Button(100 + (height * 4), buttonY, buttonSize, buttonSize, false,
+                textures.get("bulldoze_inactive"), textures.get("bulldoze_active"), textures.get("bulldoze_hover"), textures.get("bulldoze_disabled"));
 
         buildingMode = BuildingMode.SELECT;
         selectButton.activate();
@@ -84,6 +88,8 @@ public class Toolbar {
             buildingButtonClicked(tunnelButton, BuildingMode.TUNNEL);
         }  else if (intersectionButton.isClicked()) {
             buildingButtonClicked(intersectionButton, BuildingMode.INTERSECTION);
+        } else if (bulldozeButton.isClicked()) {
+            buildingButtonClicked(bulldozeButton, BuildingMode.BULLDOZE);
         }
 
         // Simulation Buttons Logic
@@ -107,6 +113,7 @@ public class Toolbar {
         roadButton.draw(spriteBatch);
         tunnelButton.draw(spriteBatch);
         intersectionButton.draw(spriteBatch);
+        bulldozeButton.draw(spriteBatch);
 
         // Simulation Buttons
         pauseButton.draw(spriteBatch);
@@ -122,6 +129,7 @@ public class Toolbar {
         roadButton.deactivate();
         tunnelButton.deactivate();
         intersectionButton.deactivate();
+        bulldozeButton.deactivate();
         // Activate clicked button
         button.activate();
     }
@@ -143,6 +151,7 @@ public class Toolbar {
         roadButton.mouseMoved(cursorPos);
         tunnelButton.mouseMoved(cursorPos);
         intersectionButton.mouseMoved(cursorPos);
+        bulldozeButton.mouseMoved(cursorPos);
 
         // Simulation Buttons
         pauseButton.mouseMoved(cursorPos);
@@ -155,6 +164,7 @@ public class Toolbar {
                 roadButton.leftClick() ||
                 tunnelButton.leftClick() ||
                 intersectionButton.leftClick() ||
+                bulldozeButton.leftClick() ||
                 pauseButton.leftClick() ||
                 playButton.leftClick() ||
                 stopButton.leftClick();

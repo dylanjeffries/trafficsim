@@ -4,5 +4,6 @@ public enum BuildingMode {
     SELECT,
     ROAD,
     TUNNEL,
-    INTERSECTION;
+    INTERSECTION,
+    BULLDOZE;
 }

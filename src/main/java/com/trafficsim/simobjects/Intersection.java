@@ -3,6 +3,8 @@ package com.trafficsim.simobjects;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.trafficsim.*;
 import com.trafficsim.enums.Direction;
 import com.trafficsim.enums.SimObjectType;
@@ -54,6 +56,18 @@ public class Intersection extends SimObject {
         processAdjacentConnection(Direction.EAST);
         processAdjacentConnection(Direction.SOUTH);
         processAdjacentConnection(Direction.WEST);
+    }
+
+    @Override
+    public Table getSidebarTable() {
+        Table table = new Table();
+        table.padTop(50);
+
+        Label nameLabel = new Label("Intersection " + id, UIStyling.TITLE_LABEL_STYLE);
+        table.add(nameLabel).colspan(2).pad(30);
+        table.row();
+
+        return table;
     }
 
     private void processAdjacentConnection(Direction direction) {

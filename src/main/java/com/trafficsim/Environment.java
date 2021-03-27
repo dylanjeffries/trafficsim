@@ -137,14 +137,31 @@ public class Environment {
         }
     }
 
+    public void deleteRoad(Road road) {
+        for (Vector2 v : road.getCellIndices()) {
+            grid.get(v).setSimObject(null);
+        }
+        roads.remove(road.getId());
+    }
+
     public void addTunnel(Tunnel tunnel) {
         tunnels.put(tunnel.getId(), tunnel);
         grid.get(tunnel.getCell().getIndex()).setSimObject(tunnel);
     }
 
+    public void deleteTunnel(Tunnel tunnel) {
+        tunnel.getCell().setSimObject(null);
+        tunnels.remove(tunnel.getId());
+    }
+
     public void addIntersection(Intersection intersection) {
         intersections.put(intersection.getId(), intersection);
         grid.get(intersection.getCell().getIndex()).setSimObject(intersection);
+    }
+
+    public void deleteIntersection(Intersection intersection) {
+        intersection.getCell().setSimObject(null);
+        intersections.remove(intersection.getId());
     }
 
     public Cell getCell(Vector2 index) {
@@ -190,6 +207,25 @@ public class Environment {
                 return intersections.containsKey(id) ? intersections.get(id) : null;
         }
         return null;
+    }
+
+    public void deleteSimObject(String id) {
+        switch (id.charAt(0)) {
+            case 'R': // Road
+                if (roads.containsKey(id)) {
+                    deleteRoad(roads.get(id));
+                }
+
+            case 'T': // Tunnel
+                if (tunnels.containsKey(id)) {
+                    deleteTunnel(tunnels.get(id));
+                }
+
+            case 'I': // Intersection
+                if (intersections.containsKey(id)) {
+                    deleteIntersection(intersections.get(id));
+                }
+        }
     }
 
     public int getGridCellSize() {
