@@ -1,7 +1,10 @@
 package com.trafficsim;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Intersector;
+import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.FloatArray;
 import com.trafficsim.enums.SimObjectType;
 import com.trafficsim.simobjects.*;
 
@@ -230,5 +233,17 @@ public class Environment {
 
     public int getGridCellSize() {
         return gridCellSize;
+    }
+
+    public boolean isCarInArea(String carId, Polygon area) {
+        for (Car c : cars.values()) {
+            if (!carId.equals(c.getId()) &&
+                    Intersector.intersectPolygons(new FloatArray(area.getTransformedVertices()),
+                    new FloatArray(c.getCollisionBox().getTransformedVertices()))) {
+                System.out.println(c.getId());
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -185,6 +185,8 @@ public class TrafficFlowSim extends ApplicationAdapter {
         sidebar.draw(spriteBatch);
         toolbar.draw(spriteBatch);
 
+        UIStyling.BODY_FONT.draw(spriteBatch, Integer.toString(Gdx.graphics.getFramesPerSecond()), 100, 100);
+
         spriteBatch.end();
     }
 
@@ -305,12 +307,5 @@ public class TrafficFlowSim extends ApplicationAdapter {
                 return super.mouseMoved(screenX, screenY);
             }
         };
-    }
-
-    private BitmapFont generateFont(String fontFileName, int fontSize) {
-        FreeTypeFontGenerator fontGenerator = new FreeTypeFontGenerator(Gdx.files.internal(fontFileName));
-        FreeTypeFontGenerator.FreeTypeFontParameter fontParameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
-        fontParameter.size = fontSize;
-        return fontGenerator.generateFont(fontParameter);
     }
 }

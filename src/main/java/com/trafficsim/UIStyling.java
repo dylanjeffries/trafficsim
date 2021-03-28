@@ -23,6 +23,7 @@ public final class UIStyling {
         // Fonts
         TITLE_FONT = generateFont("RobotoMono-Regular.ttf", 32);
         BODY_FONT = generateFont("RobotoMono-Regular.ttf", 22);
+        BODY_FONT.setColor(Color.BLACK);
 
         // Widget Styles
         TITLE_LABEL_STYLE = new Label.LabelStyle(TITLE_FONT, Color.BLACK);
