@@ -51,10 +51,10 @@ public class TunnelBuilder {
 
         // Draw valid or invalid build square
         if (valid) {
-            spriteBatch.draw(textures.get("build_valid"), buildValidPos.x, buildValidPos.y,
+            spriteBatch.draw(textures.get("green_highlight"), buildValidPos.x, buildValidPos.y,
                     environment.getGridCellSize(), environment.getGridCellSize());
         } else {
-            spriteBatch.draw(textures.get("build_invalid"), buildValidPos.x, buildValidPos.y,
+            spriteBatch.draw(textures.get("red_highlight"), buildValidPos.x, buildValidPos.y,
                     environment.getGridCellSize(), environment.getGridCellSize());
         }
     }

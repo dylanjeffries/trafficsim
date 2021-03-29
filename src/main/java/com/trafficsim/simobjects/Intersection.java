@@ -2,9 +2,11 @@ package com.trafficsim.simobjects;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.trafficsim.*;
 import com.trafficsim.enums.Direction;
 import com.trafficsim.enums.SimObjectType;
@@ -19,8 +21,14 @@ public class Intersection extends SimObject {
     private Cell cell;
 
     // Geometry
+    private Polygon collisionBox;
     private HashMap<Direction, Float> anchors;
     private HashMap<String, Direction> adjacentDirections;
+
+    // Traffic Lights
+    private float timer;
+    private int stageDuration;
+    private HashMap<Direction, Boolean> lightStates; // true for Green, false for Red
 
     // Drawing
     private Textures textures;
@@ -33,23 +41,54 @@ public class Intersection extends SimObject {
         this.cell = cell;
 
         cellSize = Config.getInteger("cell_size");
+        collisionBox = new Polygon(calculateCollisionVertices());
         calculateAnchors();
         adjacentDirections = new HashMap<String, Direction>();
+
+        timer = 0;
+        stageDuration = 8; // Seconds
+        lightStates = new HashMap<Direction, Boolean>();
+        lightStates.put(Direction.NORTH, true);
+        lightStates.put(Direction.EAST, false);
+        lightStates.put(Direction.SOUTH, true);
+        lightStates.put(Direction.WEST, false);
     }
 
     public Intersection(Intersection tunnel) {
         this(tunnel.id, tunnel.cell, tunnel.environment, tunnel.textures);
     }
 
-    public void update() {}
+    public void update() {
+        timer += Gdx.graphics.getDeltaTime();
+        if (timer >= stageDuration) {
+            lightStates.put(Direction.NORTH, !lightStates.get(Direction.NORTH));
+            lightStates.put(Direction.EAST, !lightStates.get(Direction.EAST));
+            lightStates.put(Direction.SOUTH, !lightStates.get(Direction.SOUTH));
+            lightStates.put(Direction.WEST, !lightStates.get(Direction.WEST));
+            timer = 0;
+        }
+    }
 
-    public void draw(SpriteBatch spriteBatch) {
+    public void drawGround(SpriteBatch spriteBatch) {
         spriteBatch.draw(textures.get("intersection"), cell.getX(), cell.getY(), cellSize, cellSize);
+    }
+
+    public void drawAerial(SpriteBatch spriteBatch) {
+        for (Direction d : adjacentDirections.values()) {
+            String lightTextureString = "red_light";
+            if (lightStates.get(d)) {
+                lightTextureString = "green_light";
+            }
+            spriteBatch.draw(textures.get(lightTextureString), cell.getX(), cell.getY(), cellSize/2f, cellSize/2f,
+                    cellSize, cellSize, 1, 1, Calculator.directionToDegrees(d), 0, 0,
+                    textures.get(lightTextureString).getWidth(), textures.get(lightTextureString).getHeight(), false, false);
+        }
     }
 
     public void compile() {
         // Clear connections
         connections.clear();
+        adjacentDirections.clear();
 
         // Adjacent connections
         processAdjacentConnection(Direction.NORTH);
@@ -67,6 +106,22 @@ public class Intersection extends SimObject {
         table.add(nameLabel).colspan(2).pad(30);
         table.row();
 
+        Label label = new Label("Stage\nDuration (s): ", UIStyling.BODY_LABEL_STYLE);
+        TextField textField = new TextField(String.valueOf(stageDuration), UIStyling.TEXTFIELD_STYLE);
+        textField.setTextFieldListener(new TextField.TextFieldListener() {
+            @Override
+            public void keyTyped(TextField textField, char c) {
+                if (textField.getText().equals("")) {
+                    stageDuration = 0;
+                } else {
+                    stageDuration = Integer.parseInt(textField.getText());
+                }
+            }
+        });
+        textField.setTextFieldFilter(new TextField.TextFieldFilter.DigitsOnlyFilter());
+        table.add(label);
+        table.add(textField);
+
         return table;
     }
 
@@ -79,6 +134,25 @@ public class Intersection extends SimObject {
                 adjacentDirections.put(tempCell.getSimObject().getId(), direction);
             }
         }
+    }
+
+    private float[] calculateCollisionVertices() {
+        float[] vertices = new float[8];
+        // Initially assumes car is facing South
+        // Bottom Left
+        vertices[0] = cell.getX();
+        vertices[1] = cell.getY();
+        // Top Left
+        vertices[2] = cell.getX();
+        vertices[3] = cell.getY() + cellSize;
+        // Top Right
+        vertices[4] = cell.getX() + cellSize;
+        vertices[5] = cell.getY() + cellSize;
+        // Bottom Right
+        vertices[6] = cell.getX() + cellSize;
+        vertices[7] = cell.getY();
+
+        return vertices;
     }
 
     private void calculateAnchors() {
@@ -102,5 +176,13 @@ public class Intersection extends SimObject {
         return cell;
     }
 
+    public Polygon getCollisionBox() {
+        return collisionBox;
+    }
+
     public float getAnchor(Direction direction) { return anchors.get(direction); }
+
+    public boolean getLightState(Direction direction) {
+        return lightStates.get(direction);
+    }
 }

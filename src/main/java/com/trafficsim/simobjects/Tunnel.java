@@ -100,6 +100,12 @@ public class Tunnel extends SimObject {
         }
     }
 
+    public void reset() {
+        carCounter = 1;
+        carToSpawn = null;
+        carToDespawn = "";
+    }
+
     @Override
     public Table getSidebarTable() {
         Table table = new Table();
@@ -187,10 +193,4 @@ public class Tunnel extends SimObject {
     public void setCarToDespawn(String carToDespawn) {
         this.carToDespawn = carToDespawn;
     }
-
-    public Direction getDirection() {
-        return direction;
-    }
-
-    public float getAnchor(Direction direction) { return anchors.get(direction); }
 }

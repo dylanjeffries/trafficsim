@@ -5,6 +5,7 @@ import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.FloatArray;
+import com.trafficsim.enums.Direction;
 import com.trafficsim.enums.SimObjectType;
 import com.trafficsim.simobjects.*;
 
@@ -69,6 +70,11 @@ public class Environment {
             }
         }
 
+        // Intersections
+        for (Intersection intersection : intersections.values()) {
+            intersection.update();
+        }
+
         // Cars
         for (Car car : cars.values()) {
             car.update();
@@ -94,7 +100,7 @@ public class Environment {
 
         // Intersection Roads
         for (Intersection intersection : intersections.values()) {
-            intersection.draw(spriteBatch);
+            intersection.drawGround(spriteBatch);
         }
 
         // Cars
@@ -106,6 +112,11 @@ public class Environment {
         // Tunnel Tunnels
         for (Tunnel tunnel : tunnels.values()) {
             tunnel.drawAerial(spriteBatch);
+        }
+
+        // Intersection Lights
+        for (Intersection intersection : intersections.values()) {
+            intersection.drawAerial(spriteBatch);
         }
     }
 
@@ -130,6 +141,16 @@ public class Environment {
         // Tunnels
         for (Tunnel tunnel : tunnels.values()) {
             tunnel.compile();
+        }
+    }
+
+    public void reset() {
+        // Clear all cars
+        cars.clear();
+
+        // Reset tunnels
+        for (Tunnel tunnel : tunnels.values()) {
+            tunnel.reset();
         }
     }
 
@@ -240,9 +261,28 @@ public class Environment {
             if (!carId.equals(c.getId()) &&
                     Intersector.intersectPolygons(new FloatArray(area.getTransformedVertices()),
                     new FloatArray(c.getCollisionBox().getTransformedVertices()))) {
-                System.out.println(c.getId());
                 return true;
             }
+        }
+        return false;
+    }
+
+    public boolean isIntersectionInArea(String intersectionId, Polygon area) {
+        // If Intersection exists
+        if (intersections.containsKey(intersectionId)) {
+            // If Intersection Collision Box and Area intersect
+            if (Intersector.intersectPolygons(new FloatArray(area.getTransformedVertices()),
+                    new FloatArray(intersections.get(intersectionId).getCollisionBox().getTransformedVertices()))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean getIntersectionLightState(String intersectionId, Direction direction) {
+        // If Intersection exists
+        if (intersections.containsKey(intersectionId)) {
+            return intersections.get(intersectionId).getLightState(Calculator.flipDirection(direction));
         }
         return false;
     }

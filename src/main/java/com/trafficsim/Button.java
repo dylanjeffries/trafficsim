@@ -52,14 +52,14 @@ public class Button {
 
 
     public void draw(SpriteBatch spriteBatch) {
-        if (!enabled) { //com.trafficsim.Button Disabled
+        if (!enabled) { //Button Disabled
             spriteBatch.draw(disabledTexture, pos.x, pos.y, boundingBox.getWidth(), boundingBox.getHeight());
-        } else if (active) { //com.trafficsim.Button Active
+        } else if (active) { //Button Active
             spriteBatch.draw(activeTexture, pos.x, pos.y, boundingBox.getWidth(), boundingBox.getHeight());
         } else {
-            if (hovered) { //com.trafficsim.Button Hovered
+            if (hovered) { //Button Hovered
                 spriteBatch.draw(hoverTexture, pos.x, pos.y, boundingBox.getWidth(), boundingBox.getHeight());
-            } else { //com.trafficsim.Button Inactive
+            } else { //Button Inactive
                 spriteBatch.draw(inactiveTexture, pos.x, pos.y, boundingBox.getWidth(), boundingBox.getHeight());
             }
         }

@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.badlogic.gdx.math.Matrix3;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -111,28 +112,33 @@ public class TrafficFlowSim extends ApplicationAdapter {
                 break;
 
             case STOPPED:
-                // Building Mode Switch
-                switch (toolbar.getBuildingMode()) {
-                    case ROAD:
-                        roadBuilder.update();
-                        if (roadBuilder.isNewRoadReady()) {
-                            environment.addRoad(roadBuilder.getNewRoad());
-                        }
-                        break;
+                if (toolbar.getPreviousSimulationMode() != SimulationMode.STOPPED)
+                {
+                    environment.reset();
+                } else {
+                    // Building Mode Switch
+                    switch (toolbar.getBuildingMode()) {
+                        case ROAD:
+                            roadBuilder.update();
+                            if (roadBuilder.isNewRoadReady()) {
+                                environment.addRoad(roadBuilder.getNewRoad());
+                            }
+                            break;
 
-                    case TUNNEL:
-                        tunnelBuilder.update();
-                        if (tunnelBuilder.isNewTunnelReady()) {
-                            environment.addTunnel(tunnelBuilder.getNewTunnel());
-                        }
-                        break;
+                        case TUNNEL:
+                            tunnelBuilder.update();
+                            if (tunnelBuilder.isNewTunnelReady()) {
+                                environment.addTunnel(tunnelBuilder.getNewTunnel());
+                            }
+                            break;
 
-                    case INTERSECTION:
-                        intersectionBuilder.update();
-                        if (intersectionBuilder.isNewIntersectionReady()) {
-                            environment.addIntersection(intersectionBuilder.getNewIntersection());
-                        }
-                        break;
+                        case INTERSECTION:
+                            intersectionBuilder.update();
+                            if (intersectionBuilder.isNewIntersectionReady()) {
+                                environment.addIntersection(intersectionBuilder.getNewIntersection());
+                            }
+                            break;
+                    }
                 }
                 break;
         }
@@ -156,7 +162,7 @@ public class TrafficFlowSim extends ApplicationAdapter {
                 // Building Mode Switch
                 switch (toolbar.getBuildingMode()) {
                     case SELECT:
-                        spriteBatch.draw(textures.get("select"),
+                        spriteBatch.draw(textures.get("yellow_highlight"),
                                 environment.getCellPosition(cursorIndex).x,
                                 environment.getCellPosition(cursorIndex).y,
                                 environment.getGridCellSize(),
@@ -173,6 +179,14 @@ public class TrafficFlowSim extends ApplicationAdapter {
 
                     case INTERSECTION:
                         intersectionBuilder.draw(spriteBatch, environment.getCellPosition(cursorIndex));
+                        break;
+
+                    case BULLDOZE:
+                        spriteBatch.draw(textures.get("black_yellow_highlight"),
+                                environment.getCellPosition(cursorIndex).x,
+                                environment.getCellPosition(cursorIndex).y,
+                                environment.getGridCellSize(),
+                                environment.getGridCellSize());
                         break;
                 }
                 break;
@@ -286,12 +300,12 @@ public class TrafficFlowSim extends ApplicationAdapter {
 
             @Override
             public boolean mouseMoved(int screenX, int screenY) {
-                cursorScreenPos = new Vector2(screenX, Math.abs(screenY - Config.getInteger("v_height")));
+                cursorScreenPos = new Vector2(screenX, Math.abs(screenY - Gdx.graphics.getHeight()));
                 Vector3 cursorEnvPosVector3 = camera.unproject(new Vector3(screenX, screenY, 0));
                 cursorEnvPos = new Vector2(cursorEnvPosVector3.x, cursorEnvPosVector3.y);
                 cursorIndex = environment.getIndexAtPosition(cursorEnvPos);
 
-                toolbar.mouseMoved(cursorScreenPos);
+                toolbar.mouseMoved(cursorScreenPos.scl(Config.getInteger("v_height") / (float)Gdx.graphics.getHeight()));
 
                 switch(toolbar.getBuildingMode()) {
                     case ROAD:

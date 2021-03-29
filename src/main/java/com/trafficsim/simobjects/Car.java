@@ -24,6 +24,7 @@ public class Car extends SimObject {
 
     // Attributes
     private float maxSpeed;
+    private float safeSpeed;
     private float acceleratingRate;
     private float brakingRate;
 
@@ -62,6 +63,7 @@ public class Car extends SimObject {
         length = Config.getInteger("car_length");
 
         maxSpeed = 2.241f; // 30 mph
+        safeSpeed = 0.747f; // 10 mph
         acceleratingRate = 0.0092f;
         brakingRate = -0.0112f;
 
@@ -78,7 +80,8 @@ public class Car extends SimObject {
 
         calculateFrontAndBackPositions();
         currentCell = environment.getCellAtPosition(frontPosition);
-        this.route = route;
+        this.route = new Route(route);
+        this.route.startTracking();
 
         turnRequired = false;
         turnDirection = direction;
@@ -119,14 +122,30 @@ public class Car extends SimObject {
         // Executing a queued turn
         if (turnRequired) { executeTurn(); }
 
+        // Is there another car inside my forward awareness area? If so, brake.
         if (environment.isCarInArea(id, forwardAwarenessBox)) {
-            acceleration = Calculator.capFloat(brakingRate, -1*speed, brakingRate);;
-        } else if (speed < maxSpeed) {
+            acceleration = Calculator.capFloat(brakingRate, -1*speed, brakingRate);
+        }
+        // Is my next intersection inside my forward awareness area?
+        else if (route.getNextId().charAt(0) == 'I' && environment.isIntersectionInArea(route.getNextId(), forwardAwarenessBox)) {
+            // Is the traffic light for my lane at this intersection green?
+            if (environment.getIntersectionLightState(route.getNextId(), direction)) {
+                // If green, decelerate to the safe speed.
+                acceleration = Calculator.capFloat(brakingRate, -1*(speed-safeSpeed), brakingRate);
+            } else {
+                // If red, decelerate to zero.
+                acceleration = Calculator.capFloat(brakingRate, -1*speed, brakingRate);
+            }
+        }
+        // Is my current speed below my max speed? If so, speed up.
+        else if (speed < maxSpeed) {
             acceleration = Calculator.capFloat(acceleratingRate, 0, maxSpeed - speed);
-        } else {
+        }
+        else {
             acceleration = 0;
         }
         speed += acceleration;
+
         delta.x += speed * (float)Math.sin(Calculator.directionToRadians(direction));
         delta.y -= speed * (float)Math.cos(Calculator.directionToRadians(direction));
         
@@ -143,15 +162,21 @@ public class Car extends SimObject {
     public void draw(SpriteBatch spriteBatch) {
         spriteBatch.draw(texture, position.x - (width / 2f), position.y - (length / 2f), width / 2f, length / 2f, width, length, 1, 1, Calculator.directionToDegrees(direction), 0, 0, texture.getWidth(), texture.getHeight(), false, false);
 
-//        spriteBatch.draw(marker, forwardAwarenessBox.getTransformedVertices()[0], forwardAwarenessBox.getTransformedVertices()[1], 8, 8);
-//        spriteBatch.draw(marker, forwardAwarenessBox.getTransformedVertices()[2], forwardAwarenessBox.getTransformedVertices()[3], 4, 4);
-//        spriteBatch.draw(marker, forwardAwarenessBox.getTransformedVertices()[4], forwardAwarenessBox.getTransformedVertices()[5], 4, 4);
-//        spriteBatch.draw(marker, forwardAwarenessBox.getTransformedVertices()[6], forwardAwarenessBox.getTransformedVertices()[7], 4, 4);
+        spriteBatch.draw(marker, forwardAwarenessBox.getTransformedVertices()[0], forwardAwarenessBox.getTransformedVertices()[1], 8, 8);
+        spriteBatch.draw(marker, forwardAwarenessBox.getTransformedVertices()[2], forwardAwarenessBox.getTransformedVertices()[3], 4, 4);
+        spriteBatch.draw(marker, forwardAwarenessBox.getTransformedVertices()[4], forwardAwarenessBox.getTransformedVertices()[5], 4, 4);
+        spriteBatch.draw(marker, forwardAwarenessBox.getTransformedVertices()[6], forwardAwarenessBox.getTransformedVertices()[7], 4, 4);
     }
 
     private void roadActions() {
         // Get Road from Current Cell
         Road road = (Road) currentCell.getSimObject();
+
+        // If first update on this road
+        if (currentCell.getSimObjectType() != previousCellSimObjectType) {
+            // Update route tracking
+            route.updateTracking(road.getId());
+        }
 
         // Anchor
         float anchor = road.getAnchor(direction);
@@ -188,6 +213,9 @@ public class Car extends SimObject {
 
         // If first update in this intersection
         if (currentCell.getSimObjectType() != previousCellSimObjectType) {
+            // Update route tracking
+            route.updateTracking(intersection.getId());
+
             turnDirection = intersection.getNextDirection(route.getIdAfter(intersection.getId()));
             turnRequired = direction != turnDirection;
             turnAnchor = intersection.getAnchor(turnDirection);
