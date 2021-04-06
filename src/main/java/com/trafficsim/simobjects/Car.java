@@ -6,6 +6,7 @@ import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.trafficsim.*;
+import com.trafficsim.driverprofiles.DriverProfile;
 import com.trafficsim.enums.Direction;
 import com.trafficsim.enums.SimObjectType;
 
@@ -22,11 +23,8 @@ public class Car extends SimObject {
     private float width;
     private float length;
 
-    // Attributes
-    private float maxSpeed;
-    private float safeSpeed;
-    private float acceleratingRate;
-    private float brakingRate;
+    // Profile
+    private DriverProfile profile;
 
     // Physics
     private Vector2 delta;
@@ -48,13 +46,9 @@ public class Car extends SimObject {
     private Direction turnDirection;
     private float turnAnchor;
 
-    // Drawing
-    private Texture texture;
-    private Texture marker;
-
     private int counter;
 
-    public Car(String id, Vector2 position, Direction direction, Route route, Environment environment, Textures textures) {
+    public Car(String id, Vector2 position, Direction direction, Route route, DriverProfile profile, Environment environment) {
         super(id, SimObjectType.CAR, 0);
         this.position = position.cpy();
         this.environment = environment;
@@ -62,10 +56,7 @@ public class Car extends SimObject {
         width = Config.getInteger("car_width");
         length = Config.getInteger("car_length");
 
-        maxSpeed = 2.241f; // 30 mph
-        safeSpeed = 0.747f; // 10 mph
-        acceleratingRate = 0.0092f;
-        brakingRate = -0.0112f;
+        this.profile = profile;
 
         delta = new Vector2(0, 0);
         speed = 0;
@@ -86,9 +77,6 @@ public class Car extends SimObject {
         turnRequired = false;
         turnDirection = direction;
         turnAnchor = 0;
-
-        texture = textures.get("car_pink");
-        marker = textures.get("marker");
 
         counter = 0;
     }
@@ -124,22 +112,22 @@ public class Car extends SimObject {
 
         // Is there another car inside my forward awareness area? If so, brake.
         if (environment.isCarInArea(id, forwardAwarenessBox)) {
-            acceleration = Calculator.capFloat(brakingRate, -1*speed, brakingRate);
+            acceleration = Calculator.capFloat(profile.getBrakingRate(), -1*speed, profile.getBrakingRate());
         }
         // Is my next intersection inside my forward awareness area?
         else if (route.getNextId().charAt(0) == 'I' && environment.isIntersectionInArea(route.getNextId(), forwardAwarenessBox)) {
             // Is the traffic light for my lane at this intersection green?
             if (environment.getIntersectionLightState(route.getNextId(), direction)) {
                 // If green, decelerate to the safe speed.
-                acceleration = Calculator.capFloat(brakingRate, -1*(speed-safeSpeed), brakingRate);
+                acceleration = Calculator.capFloat(profile.getBrakingRate(), -1*(speed-profile.getSafeSpeed()), profile.getBrakingRate());
             } else {
                 // If red, decelerate to zero.
-                acceleration = Calculator.capFloat(brakingRate, -1*speed, brakingRate);
+                acceleration = Calculator.capFloat(profile.getBrakingRate(), -1*speed, profile.getBrakingRate());
             }
         }
         // Is my current speed below my max speed? If so, speed up.
-        else if (speed < maxSpeed) {
-            acceleration = Calculator.capFloat(acceleratingRate, 0, maxSpeed - speed);
+        else if (speed < profile.getMaxSpeed()) {
+            acceleration = Calculator.capFloat(profile.getAcceleratingRate(), 0, profile.getMaxSpeed() - speed);
         }
         else {
             acceleration = 0;
@@ -160,12 +148,15 @@ public class Car extends SimObject {
     }
 
     public void draw(SpriteBatch spriteBatch) {
-        spriteBatch.draw(texture, position.x - (width / 2f), position.y - (length / 2f), width / 2f, length / 2f, width, length, 1, 1, Calculator.directionToDegrees(direction), 0, 0, texture.getWidth(), texture.getHeight(), false, false);
+        spriteBatch.draw(profile.getTexture(), position.x - (width / 2f), position.y - (length / 2f),
+                width / 2f, length / 2f, width, length, 1, 1,
+                Calculator.directionToDegrees(direction), 0, 0,
+                profile.getTexture().getWidth(), profile.getTexture().getHeight(), false, false);
 
-        spriteBatch.draw(marker, forwardAwarenessBox.getTransformedVertices()[0], forwardAwarenessBox.getTransformedVertices()[1], 8, 8);
-        spriteBatch.draw(marker, forwardAwarenessBox.getTransformedVertices()[2], forwardAwarenessBox.getTransformedVertices()[3], 4, 4);
-        spriteBatch.draw(marker, forwardAwarenessBox.getTransformedVertices()[4], forwardAwarenessBox.getTransformedVertices()[5], 4, 4);
-        spriteBatch.draw(marker, forwardAwarenessBox.getTransformedVertices()[6], forwardAwarenessBox.getTransformedVertices()[7], 4, 4);
+//        spriteBatch.draw(marker, forwardAwarenessBox.getTransformedVertices()[0], forwardAwarenessBox.getTransformedVertices()[1], 8, 8);
+//        spriteBatch.draw(marker, forwardAwarenessBox.getTransformedVertices()[2], forwardAwarenessBox.getTransformedVertices()[3], 4, 4);
+//        spriteBatch.draw(marker, forwardAwarenessBox.getTransformedVertices()[4], forwardAwarenessBox.getTransformedVertices()[5], 4, 4);
+//        spriteBatch.draw(marker, forwardAwarenessBox.getTransformedVertices()[6], forwardAwarenessBox.getTransformedVertices()[7], 4, 4);
     }
 
     private void roadActions() {
@@ -296,7 +287,7 @@ public class Car extends SimObject {
     private float[] updateForwardAwareness() {
         float[] vertices = forwardAwarenessBox.getVertices();
         // Braking Distance Calculation
-        float brakingDistance = (speed * (speed / brakingRate)) / 2f;
+        float brakingDistance = (speed * (speed / profile.getBrakingRate())) / 2f;
         // New original y including forward awareness
         // Space for braking to zero and half a car length
         float newY = vertices[3] - Math.abs(brakingDistance) - (length / 2f);

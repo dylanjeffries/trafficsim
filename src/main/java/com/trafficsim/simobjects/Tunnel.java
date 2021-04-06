@@ -8,6 +8,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.trafficsim.*;
+import com.trafficsim.driverprofiles.DriverProfileManager;
 import com.trafficsim.enums.Direction;
 import com.trafficsim.enums.SimObjectType;
 
@@ -31,6 +32,7 @@ public class Tunnel extends SimObject {
     private Car carToSpawn;
     private String carToDespawn;
     private ArrayList<Route> routes;
+    private DriverProfileManager driverProfileManager;
     private int rate;
     private float timer;
 
@@ -48,12 +50,13 @@ public class Tunnel extends SimObject {
         carToSpawn = null;
         carToDespawn = "";
         routes = new ArrayList<Route>();
+        driverProfileManager = new DriverProfileManager(textures);
 
         cellSize = Config.getInteger("cell_size");
         calculateAnchors();
         spawnPosition = calculateSpawnPosition();
 
-        rate = 30;
+        rate = 10;
         timer = 0;
     }
 
@@ -64,10 +67,11 @@ public class Tunnel extends SimObject {
     public void update() {
         // Timer
         timer += Gdx.graphics.getDeltaTime();
-        if (timer >= (60f / rate)) {
+        if (timer >= (60f / rate) && routes.size() != 0) {
             // Set carToSpawn
             Random r = new Random();
-            carToSpawn = new Car("C" + carCounter + id, spawnPosition, direction, routes.get(r.nextInt(routes.size())), environment, textures);
+            carToSpawn = new Car("C" + carCounter + id, spawnPosition, direction,
+                    routes.get(r.nextInt(routes.size())), driverProfileManager.getRandomProfile(), environment);
             carCounter++;
             // Reset Timer
             timer = 0;
@@ -86,9 +90,15 @@ public class Tunnel extends SimObject {
                 textures.get("tunnel").getWidth(), textures.get("tunnel").getHeight(), false, false);
     }
 
-    public void compile() {
+    public void compile(GlobalSettings globalSettings) {
         // Clear routes
         routes.clear();
+
+        // Set Driver Profile Manager percentages
+        driverProfileManager.setPercentages(
+                globalSettings.getSlowPct(),
+                globalSettings.getNormalPct(),
+                globalSettings.getFastPct());
 
         // Get cell in the forwards index
         Cell forwardCell = environment.getCell(Calculator.getIndexInDirection(cell.getIndex(), direction));

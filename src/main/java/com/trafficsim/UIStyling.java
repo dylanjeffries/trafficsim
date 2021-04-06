@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Slider;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 
 public final class UIStyling {
@@ -18,11 +19,14 @@ public final class UIStyling {
     public static Label.LabelStyle TITLE_LABEL_STYLE;
     public static Label.LabelStyle BODY_LABEL_STYLE;
     public static TextField.TextFieldStyle TEXTFIELD_STYLE;
+    public static Slider.SliderStyle SLOW_SLIDER_STYLE;
+    public static Slider.SliderStyle NORMAL_SLIDER_STYLE;
+    public static Slider.SliderStyle FAST_SLIDER_STYLE;
 
     public static void init(Textures textures) {
         // Fonts
-        TITLE_FONT = generateFont("RobotoMono-Regular.ttf", 32);
-        BODY_FONT = generateFont("RobotoMono-Regular.ttf", 22);
+        TITLE_FONT = generateFont("RobotoMono-Regular.ttf", 28);
+        BODY_FONT = generateFont("RobotoMono-Regular.ttf", 18);
         BODY_FONT.setColor(Color.BLACK);
 
         // Widget Styles
@@ -35,6 +39,15 @@ public final class UIStyling {
                 new Image(textures.get("textfield_selection")).getDrawable(),
                 new Image(textures.get("textfield_background")).getDrawable());
 
+        SLOW_SLIDER_STYLE = new Slider.SliderStyle(
+                new Image(textures.get("slider_slow_bcg")).getDrawable(),
+                new Image(textures.get("slider_knob")).getDrawable());
+        NORMAL_SLIDER_STYLE = new Slider.SliderStyle(
+                new Image(textures.get("slider_normal_bcg")).getDrawable(),
+                new Image(textures.get("slider_knob")).getDrawable());
+        FAST_SLIDER_STYLE = new Slider.SliderStyle(
+                new Image(textures.get("slider_fast_bcg")).getDrawable(),
+                new Image(textures.get("slider_knob")).getDrawable());
     }
 
     private static BitmapFont generateFont(String fontFileName, int fontSize) {

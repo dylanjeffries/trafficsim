@@ -10,6 +10,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.trafficsim.*;
 import com.trafficsim.enums.Direction;
 import com.trafficsim.enums.SimObjectType;
+import com.trafficsim.trafficlights.TrafficLightManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,9 +27,9 @@ public class Intersection extends SimObject {
     private HashMap<String, Direction> adjacentDirections;
 
     // Traffic Lights
-    private float timer;
-    private int stageDuration;
-    private HashMap<Direction, Boolean> lightStates; // true for Green, false for Red
+    private TrafficLightManager trafficLightManager;
+    private int stageOneDuration;
+    private int stageTwoDuration;
 
     // Drawing
     private Textures textures;
@@ -45,13 +46,9 @@ public class Intersection extends SimObject {
         calculateAnchors();
         adjacentDirections = new HashMap<String, Direction>();
 
-        timer = 0;
-        stageDuration = 8; // Seconds
-        lightStates = new HashMap<Direction, Boolean>();
-        lightStates.put(Direction.NORTH, true);
-        lightStates.put(Direction.EAST, false);
-        lightStates.put(Direction.SOUTH, true);
-        lightStates.put(Direction.WEST, false);
+        trafficLightManager = new TrafficLightManager();
+        stageOneDuration = 5;
+        stageTwoDuration = 5;
     }
 
     public Intersection(Intersection tunnel) {
@@ -59,14 +56,7 @@ public class Intersection extends SimObject {
     }
 
     public void update() {
-        timer += Gdx.graphics.getDeltaTime();
-        if (timer >= stageDuration) {
-            lightStates.put(Direction.NORTH, !lightStates.get(Direction.NORTH));
-            lightStates.put(Direction.EAST, !lightStates.get(Direction.EAST));
-            lightStates.put(Direction.SOUTH, !lightStates.get(Direction.SOUTH));
-            lightStates.put(Direction.WEST, !lightStates.get(Direction.WEST));
-            timer = 0;
-        }
+        trafficLightManager.update();
     }
 
     public void drawGround(SpriteBatch spriteBatch) {
@@ -74,14 +64,16 @@ public class Intersection extends SimObject {
     }
 
     public void drawAerial(SpriteBatch spriteBatch) {
-        for (Direction d : adjacentDirections.values()) {
-            String lightTextureString = "red_light";
-            if (lightStates.get(d)) {
-                lightTextureString = "green_light";
+        if (trafficLightManager.isEnabled()) {
+            for (Direction d : adjacentDirections.values()) {
+                String lightTextureString = "red_light";
+                if (trafficLightManager.getState(d)) {
+                    lightTextureString = "green_light";
+                }
+                spriteBatch.draw(textures.get(lightTextureString), cell.getX(), cell.getY(), cellSize / 2f, cellSize / 2f,
+                        cellSize, cellSize, 1, 1, Calculator.directionToDegrees(d), 0, 0,
+                        textures.get(lightTextureString).getWidth(), textures.get(lightTextureString).getHeight(), false, false);
             }
-            spriteBatch.draw(textures.get(lightTextureString), cell.getX(), cell.getY(), cellSize/2f, cellSize/2f,
-                    cellSize, cellSize, 1, 1, Calculator.directionToDegrees(d), 0, 0,
-                    textures.get(lightTextureString).getWidth(), textures.get(lightTextureString).getHeight(), false, false);
         }
     }
 
@@ -95,32 +87,52 @@ public class Intersection extends SimObject {
         processAdjacentConnection(Direction.EAST);
         processAdjacentConnection(Direction.SOUTH);
         processAdjacentConnection(Direction.WEST);
+
+        // Traffic Light Manager
+        // If the intersection is a corner, disable traffic lights. Else enable them.
+        trafficLightManager.compile(adjacentDirections.size() > 2, stageOneDuration, stageTwoDuration);
     }
 
     @Override
     public Table getSidebarTable() {
         Table table = new Table();
-        table.padTop(50);
 
         Label nameLabel = new Label("Intersection " + id, UIStyling.TITLE_LABEL_STYLE);
-        table.add(nameLabel).colspan(2).pad(30);
+        table.add(nameLabel).colspan(2).padTop(250).spaceBottom(40);
         table.row();
 
-        Label label = new Label("Stage\nDuration (s): ", UIStyling.BODY_LABEL_STYLE);
-        TextField textField = new TextField(String.valueOf(stageDuration), UIStyling.TEXTFIELD_STYLE);
-        textField.setTextFieldListener(new TextField.TextFieldListener() {
+        Label stageOneLabel = new Label("Stage One\n(North/South)\nDuration (s): ", UIStyling.BODY_LABEL_STYLE);
+        TextField stageOneTextfield = new TextField(String.valueOf(stageOneDuration), UIStyling.TEXTFIELD_STYLE);
+        stageOneTextfield.setTextFieldListener(new TextField.TextFieldListener() {
             @Override
             public void keyTyped(TextField textField, char c) {
                 if (textField.getText().equals("")) {
-                    stageDuration = 0;
+                    stageOneDuration = 0;
                 } else {
-                    stageDuration = Integer.parseInt(textField.getText());
+                    stageOneDuration = Integer.parseInt(textField.getText());
                 }
             }
         });
-        textField.setTextFieldFilter(new TextField.TextFieldFilter.DigitsOnlyFilter());
-        table.add(label);
-        table.add(textField);
+        stageOneTextfield.setTextFieldFilter(new TextField.TextFieldFilter.DigitsOnlyFilter());
+        table.add(stageOneLabel).spaceBottom(40);
+        table.add(stageOneTextfield).spaceBottom(40);
+        table.row();
+
+        Label stageTwoLabel = new Label("Stage Two\n(East/West)\nDuration (s): ", UIStyling.BODY_LABEL_STYLE);
+        TextField stageTwoTextfield = new TextField(String.valueOf(stageTwoDuration), UIStyling.TEXTFIELD_STYLE);
+        stageTwoTextfield.setTextFieldListener(new TextField.TextFieldListener() {
+            @Override
+            public void keyTyped(TextField textField, char c) {
+                if (textField.getText().equals("")) {
+                    stageTwoDuration = 0;
+                } else {
+                    stageTwoDuration = Integer.parseInt(textField.getText());
+                }
+            }
+        });
+        stageTwoTextfield.setTextFieldFilter(new TextField.TextFieldFilter.DigitsOnlyFilter());
+        table.add(stageTwoLabel);
+        table.add(stageTwoTextfield);
 
         return table;
     }
@@ -182,7 +194,7 @@ public class Intersection extends SimObject {
 
     public float getAnchor(Direction direction) { return anchors.get(direction); }
 
-    public boolean getLightState(Direction direction) {
-        return lightStates.get(direction);
+    public boolean getTrafficLightState(Direction direction) {
+        return trafficLightManager.getState(direction);
     }
 }

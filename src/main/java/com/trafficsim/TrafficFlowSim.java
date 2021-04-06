@@ -53,11 +53,12 @@ public class TrafficFlowSim extends ApplicationAdapter {
     public void create() {
         super.create();
 
-        // Config
+        // Inits
         Config.init();
+        textures = new Textures("textures.properties");
+        UIStyling.init(textures);
 
         // Graphics
-        textures = new Textures("textures.properties");
         spriteBatch = new SpriteBatch();
         camera = new BoundedCamera(0, (Config.getInteger("grid_width") * Config.getInteger("cell_size")),
                 (Config.getInteger("grid_height") * Config.getInteger("cell_size")), 0);
@@ -74,7 +75,6 @@ public class TrafficFlowSim extends ApplicationAdapter {
         intersectionBuilder = new IntersectionBuilder(environment, textures);
 
         // Input and UI
-        UIStyling.init(textures);
         inputMultiplexer = new InputMultiplexer();
         inputMultiplexer.addProcessor(createMainInputProcessor());
         Gdx.input.setInputProcessor(inputMultiplexer);
@@ -99,6 +99,11 @@ public class TrafficFlowSim extends ApplicationAdapter {
         toolbar.update();
         buildingMode = toolbar.getBuildingMode();
         simulationMode = toolbar.getSimulationMode();
+        if (toolbar.isGlobalClicked()) {
+            sidebar.setSimObject(environment.getGlobalSettings());
+            sidebar.setSelectedCell(null);
+            sidebar.show();
+        }
 
         // Simulation Mode Switch
         switch (toolbar.getSimulationMode()) {
@@ -156,47 +161,65 @@ public class TrafficFlowSim extends ApplicationAdapter {
         // Draw Environment Ground (Level 0)
         environment.draw(spriteBatch);
 
-        // Draw Select Square or Builders (Level 1)
-        switch (toolbar.getSimulationMode()) {
-            case STOPPED:
-                // Building Mode Switch
-                switch (toolbar.getBuildingMode()) {
-                    case SELECT:
-                        spriteBatch.draw(textures.get("yellow_highlight"),
-                                environment.getCellPosition(cursorIndex).x,
-                                environment.getCellPosition(cursorIndex).y,
-                                environment.getGridCellSize(),
-                                environment.getGridCellSize());
-                        break;
+        // Draw Select or Builders (Level 1)
+        if (toolbar.getSimulationMode() == SimulationMode.STOPPED) {
+            // Building Mode Switch
+            switch (toolbar.getBuildingMode()) {
+                case SELECT:
+                    // Select Highlight
+                    spriteBatch.draw(textures.get("yellow_highlight"),
+                            environment.getCellPosition(cursorIndex).x,
+                            environment.getCellPosition(cursorIndex).y,
+                            environment.getGridCellSize(),
+                            environment.getGridCellSize());
+                    // Sidebar Selected Cell Highlight
+                    if (sidebar.getSelectedCell() != null) {
+                        if (sidebar.getAnimationState()) {
+                            spriteBatch.draw(textures.get("yellow_dot_1_highlight"),
+                                    sidebar.getSelectedCell().getX(),
+                                    sidebar.getSelectedCell().getY(),
+                                    environment.getGridCellSize(),
+                                    environment.getGridCellSize());
+                        } else {
+                            spriteBatch.draw(textures.get("yellow_dot_2_highlight"),
+                                    sidebar.getSelectedCell().getX(),
+                                    sidebar.getSelectedCell().getY(),
+                                    environment.getGridCellSize(),
+                                    environment.getGridCellSize());
+                        }
+                    }
+                    break;
 
-                    case ROAD:
-                        roadBuilder.draw(spriteBatch, environment.getCellPosition(cursorIndex));
-                        break;
+                case ROAD:
+                    roadBuilder.draw(spriteBatch, environment.getCellPosition(cursorIndex));
+                    break;
 
-                    case TUNNEL:
-                        tunnelBuilder.draw(spriteBatch, environment.getCellPosition(cursorIndex));
-                        break;
+                case TUNNEL:
+                    tunnelBuilder.draw(spriteBatch, environment.getCellPosition(cursorIndex));
+                    break;
 
-                    case INTERSECTION:
-                        intersectionBuilder.draw(spriteBatch, environment.getCellPosition(cursorIndex));
-                        break;
+                case INTERSECTION:
+                    intersectionBuilder.draw(spriteBatch, environment.getCellPosition(cursorIndex));
+                    break;
 
-                    case BULLDOZE:
-                        spriteBatch.draw(textures.get("black_yellow_highlight"),
-                                environment.getCellPosition(cursorIndex).x,
-                                environment.getCellPosition(cursorIndex).y,
-                                environment.getGridCellSize(),
-                                environment.getGridCellSize());
-                        break;
-                }
-                break;
+                case BULLDOZE:
+                    spriteBatch.draw(textures.get("black_yellow_highlight"),
+                            environment.getCellPosition(cursorIndex).x,
+                            environment.getCellPosition(cursorIndex).y,
+                            environment.getGridCellSize(),
+                            environment.getGridCellSize());
+                    break;
+            }
         }
 
         // UI Draws (Static to the camera)
         spriteBatch.setProjectionMatrix(staticMatrix);
 
-        // Draw Sidebar and Toolbar
-        sidebar.draw(spriteBatch);
+        // Draw Sidebar
+        if (toolbar.getSimulationMode() == SimulationMode.STOPPED && toolbar.getBuildingMode() == BuildingMode.SELECT) {
+            sidebar.draw(spriteBatch);
+        }
+        // Draw Toolbar
         toolbar.draw(spriteBatch);
 
         UIStyling.BODY_FONT.draw(spriteBatch, Integer.toString(Gdx.graphics.getFramesPerSecond()), 100, 100);
@@ -242,9 +265,11 @@ public class TrafficFlowSim extends ApplicationAdapter {
                             case SELECT:
                                 if (cursorCell.getSimObjectType() != SimObjectType.NONE) {
                                     sidebar.setSimObject(cursorCell.getSimObject());
+                                    sidebar.setSelectedCell(cursorCell);
                                     sidebar.show();
                                 } else {
                                     sidebar.setSimObject(null);
+                                    sidebar.setSelectedCell(null);
                                     sidebar.hide();
                                 }
                             case ROAD:

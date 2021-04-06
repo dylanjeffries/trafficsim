@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.FloatArray;
 import com.trafficsim.enums.Direction;
 import com.trafficsim.enums.SimObjectType;
@@ -20,6 +21,7 @@ public class Environment {
     private HashMap<Vector2, Cell> grid;
 
     //SimObjects
+    private GlobalSettings globalSettings;
     private HashMap<String, Car> cars;
     private HashMap<String, Road> roads;
     private HashMap<String, Tunnel> tunnels;
@@ -39,6 +41,8 @@ public class Environment {
                 );
             }
         }
+
+        globalSettings = new GlobalSettings();
 
         cars = new HashMap<String, Car>();
         roads = new HashMap<String, Road>();
@@ -140,7 +144,7 @@ public class Environment {
         }
         // Tunnels
         for (Tunnel tunnel : tunnels.values()) {
-            tunnel.compile();
+            tunnel.compile(globalSettings);
         }
     }
 
@@ -282,8 +286,12 @@ public class Environment {
     public boolean getIntersectionLightState(String intersectionId, Direction direction) {
         // If Intersection exists
         if (intersections.containsKey(intersectionId)) {
-            return intersections.get(intersectionId).getLightState(Calculator.flipDirection(direction));
+            return intersections.get(intersectionId).getTrafficLightState(Calculator.flipDirection(direction));
         }
         return false;
+    }
+
+    public GlobalSettings getGlobalSettings() {
+        return globalSettings;
     }
 }

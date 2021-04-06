@@ -8,6 +8,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.trafficsim.enums.Direction;
 import com.trafficsim.simobjects.SimObject;
 
 public class Sidebar {
@@ -15,12 +16,16 @@ public class Sidebar {
     // Position
     private Vector2 topLeft;
 
-    // SimObject
+    // Selection
     private SimObject simObject;
+    private Cell selectedCell;
+    private float timer;
+    private float animationInterval;
+    private boolean animationState;
 
     // Texture and Fonts
     private boolean visible;
-    private Texture texture;
+    private Textures textures;
 
     // Stage and Widgets
     private Stage stage;
@@ -31,9 +36,13 @@ public class Sidebar {
                 Config.getInteger("v_height") - Config.getInteger("toolbar_height"));
 
         simObject = null;
+        selectedCell = null;
+        timer = 0;
+        animationInterval = 0.3f;
+        animationState = false;
 
         visible = false;
-        texture = textures.get("sidebar");
+        this.textures = textures;
 
         stage = new Stage();
         table = new Table();
@@ -43,12 +52,19 @@ public class Sidebar {
 
     public void update() {
         stage.act();
+
+        // Selected Cell Animation
+        timer += Gdx.graphics.getDeltaTime();
+        if (timer >= animationInterval) {
+            animationState = !animationState;
+            timer = 0;
+        }
     }
 
     public void draw(SpriteBatch spriteBatch) {
         if (visible) {
             // Sidebar
-            spriteBatch.draw(texture,
+            spriteBatch.draw(textures.get("sidebar"),
                     Config.getInteger("v_width") - Config.getInteger("sidebar_width"),
                     0,
                     Config.getInteger("sidebar_width"),
@@ -70,6 +86,18 @@ public class Sidebar {
         } else {
             table.clear();
         }
+    }
+
+    public Cell getSelectedCell() {
+        return selectedCell;
+    }
+
+    public void setSelectedCell(Cell selectedCell) {
+        this.selectedCell = selectedCell;
+    }
+
+    public boolean getAnimationState() {
+        return animationState;
     }
 
     private void enableTouch() {

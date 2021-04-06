@@ -31,6 +31,10 @@ public class Toolbar {
     private Button playButton;
     private Button stopButton;
 
+    // Global
+    private boolean globalClicked;
+    private Button globalButton;
+
     public Toolbar(float x, float y, Textures textures) {
         pos = new Vector2(x, y);
         height = Config.getInteger("toolbar_height");
@@ -73,6 +77,12 @@ public class Toolbar {
         previousSimulationMode = SimulationMode.STOPPED;
         pauseButton.disable();
         stopButton.activate();
+
+        // Global
+        globalButton = new Button(Gdx.graphics.getWidth() - 100 - buttonSize, buttonY, buttonSize, buttonSize, false,
+                textures.get("global"));
+
+        globalClicked = false;
     }
 
     public void update() {
@@ -102,6 +112,9 @@ public class Toolbar {
             simulationButtonClicked(stopButton, SimulationMode.STOPPED);
             pauseButton.disable();
         }
+
+        // Global Button Logic
+        globalClicked = globalButton.isClicked();
     }
 
     public void draw(SpriteBatch spriteBatch) {
@@ -119,6 +132,9 @@ public class Toolbar {
         pauseButton.draw(spriteBatch);
         playButton.draw(spriteBatch);
         stopButton.draw(spriteBatch);
+
+        // Global Button
+        globalButton.draw(spriteBatch);
     }
 
     private void buildingButtonClicked(Button button, BuildingMode newBuildingMode) {
@@ -157,6 +173,9 @@ public class Toolbar {
         pauseButton.mouseMoved(cursorPos);
         playButton.mouseMoved(cursorPos);
         stopButton.mouseMoved(cursorPos);
+
+        //Global Button
+        globalButton.mouseMoved(cursorPos);
     }
 
     public boolean leftClick() {
@@ -167,7 +186,8 @@ public class Toolbar {
                 bulldozeButton.leftClick() ||
                 pauseButton.leftClick() ||
                 playButton.leftClick() ||
-                stopButton.leftClick();
+                stopButton.leftClick() ||
+                globalButton.leftClick();
     }
 
     public BuildingMode getBuildingMode() {
@@ -178,5 +198,8 @@ public class Toolbar {
     }
     public SimulationMode getPreviousSimulationMode() {
         return previousSimulationMode;
+    }
+    public boolean isGlobalClicked() {
+        return globalClicked;
     }
 }
