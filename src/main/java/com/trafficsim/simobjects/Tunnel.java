@@ -12,7 +12,12 @@ import com.trafficsim.driverprofiles.DriverProfileManager;
 import com.trafficsim.enums.Direction;
 import com.trafficsim.enums.SimObjectType;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Random;
 
@@ -40,6 +45,11 @@ public class Tunnel extends SimObject {
     private Textures textures;
     private int cellSize;
 
+    // Output
+    private float outputTimer;
+    private int minutesPassed;
+    private int carsDespawned;
+
     public Tunnel(String id, Cell cell, Direction direction, Environment environment, Textures textures) {
         super(id, SimObjectType.TUNNEL, 1);
         this.environment = environment;
@@ -58,6 +68,10 @@ public class Tunnel extends SimObject {
 
         rate = 10;
         timer = 0;
+
+        outputTimer = 0;
+        minutesPassed = 0;
+        carsDespawned = 0;
     }
 
     public Tunnel(Tunnel tunnel) {
@@ -108,12 +122,24 @@ public class Tunnel extends SimObject {
             // Find routes to other tunnels using forward SimObject's id and a base route containing self
             calculateRoutes(forwardCell.getSimObject().getId(), new Route(this));
         }
+
+        // Write configuration to File
+        try {
+            // Write to File
+            FileWriter writer = new FileWriter(Config.getOutputFilename(), true);
+            writer.write("\n" + id + ", " + rate);
+            writer.close();
+        } catch (IOException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
     }
 
     public void reset() {
         carCounter = 1;
         carToSpawn = null;
         carToDespawn = "";
+        carsDespawned = 0;
     }
 
     @Override
@@ -202,5 +228,24 @@ public class Tunnel extends SimObject {
 
     public void setCarToDespawn(String carToDespawn) {
         this.carToDespawn = carToDespawn;
+    }
+
+    public String despawnCar() {
+        carsDespawned++;
+        String temp = carToDespawn;
+        carToDespawn = "";
+        return temp;
+    }
+
+    public int getCarsDespawned() {
+        return carsDespawned;
+    }
+
+    public void setCarsDespawned(int carsDespawned) {
+        this.carsDespawned = carsDespawned;
+    }
+
+    public int getRate() {
+        return rate;
     }
 }

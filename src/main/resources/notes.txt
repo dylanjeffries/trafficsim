@@ -5,21 +5,21 @@ Middle Mouse - Drag camera
 Right Mouse - Deselect or Cancel
 
 Red OR Green square follows cursor to show if you can build in that cell
-com.trafficsim.simobjects.Road drags after click 1 and sets after click 2
+Road drags after click 1 and sets after click 2
 Intersection takes 1 cell
 
-com.trafficsim.simobjects.Road Building
+Road Building
 - Left Click
     - Starting new road
     - Finishing new road
 - Right Click
     - Cancelling new road
 
-com.trafficsim.simobjects.Road build validity
-- com.trafficsim.simobjects.Road cannot intersect existing objects
-- com.trafficsim.simobjects.Road cannot be adjacent to other roads
+Road build validity
+Road cannot intersect existing objects
+Road cannot be adjacent to other roads
 
-com.trafficsim.simobjects.Tunnel Building
+Tunnel Building
 - Tunnels can go anywhere an existing object isn't
 - Rotate tunnel with R
 

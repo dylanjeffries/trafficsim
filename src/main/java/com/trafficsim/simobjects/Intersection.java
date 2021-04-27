@@ -12,6 +12,8 @@ import com.trafficsim.enums.Direction;
 import com.trafficsim.enums.SimObjectType;
 import com.trafficsim.trafficlights.TrafficLightManager;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -91,6 +93,17 @@ public class Intersection extends SimObject {
         // Traffic Light Manager
         // If the intersection is a corner, disable traffic lights. Else enable them.
         trafficLightManager.compile(adjacentDirections.size() > 2, stageOneDuration, stageTwoDuration);
+
+        // Write configuration to File
+        try {
+            // Write to File
+            FileWriter writer = new FileWriter(Config.getOutputFilename(), true);
+            writer.write("\n" + id + ", " + stageOneDuration + ", " + stageTwoDuration);
+            writer.close();
+        } catch (IOException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
     }
 
     @Override

@@ -2,10 +2,7 @@ package com.trafficsim;
 
 import com.badlogic.gdx.*;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
-import com.badlogic.gdx.math.Matrix3;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -15,6 +12,10 @@ import com.trafficsim.builders.TunnelBuilder;
 import com.trafficsim.enums.BuildingMode;
 import com.trafficsim.enums.SimObjectType;
 import com.trafficsim.enums.SimulationMode;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 
 public class TrafficFlowSim extends ApplicationAdapter {
 
@@ -49,6 +50,7 @@ public class TrafficFlowSim extends ApplicationAdapter {
     private Toolbar toolbar;
     private Sidebar sidebar;
 
+
     @Override
     public void create() {
         super.create();
@@ -81,6 +83,20 @@ public class TrafficFlowSim extends ApplicationAdapter {
 
         toolbar = new Toolbar(0, Gdx.graphics.getHeight() - Config.getInteger("toolbar_height"), textures);
         sidebar = new Sidebar(textures);
+
+        try {
+            // Create Output File
+            File file = new File(Config.getOutputFilename());
+            file.createNewFile();
+
+            // Write Time and Date to File
+            FileWriter writer = new FileWriter(Config.getOutputFilename());
+            writer.write("*** NEW SESSION - " + Config.getDateTime() + " ***");
+            writer.close();
+        } catch (IOException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
     }
 
     private void update() {

@@ -10,7 +10,7 @@ public class DesktopLauncher {
         config.width = 1920;
         config.height = 1080;
         config.resizable = false;
-        config.title = "Traffic Flow Simulator";
+        config.title = "SEATS";
         config.addIcon("icon/icon128.png", Files.FileType.Internal);
         config.addIcon("icon/icon32.png", Files.FileType.Internal);
         config.addIcon("icon/icon16.png", Files.FileType.Internal);
